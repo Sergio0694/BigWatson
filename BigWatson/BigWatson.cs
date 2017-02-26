@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BigWatson.Misc;
 using BigWatson.Models;
@@ -191,22 +192,26 @@ namespace BigWatson
         /// Makes sure the number of exception reports in the database isn't too high
         /// </summary>
         /// <param name="length">The maximum number of items in the database</param>
+        /// <param name="token">The cancellation token for the operation</param>
         /// <returns>An <see cref="AsyncOperationResult{T}"/> instance that indicates whether the method execution was successful, 
         /// and eventually a readonly list of <see cref="ExceptionReport"/> instances that represents the reports that were just deleted</returns>
         [PublicAPI]
-        public static async Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>>  TryTrimAndOptimizeDatabaseAsync(int length)
+        public static async Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>>  TryTrimAndOptimizeDatabaseAsync(int length, CancellationToken token)
         {
             // Checks
             if (length < 0) throw new ArgumentOutOfRangeException("The length must be a positive number");
+            if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
 
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();
+            if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
 
             try
             {
                 // Check cleanup required
                 int total = await ExceptionsTable.CountAsync();
                 if (total <= length) return new List<ExceptionReport>();
+                if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
 
                 // Get all the instances and sort them chronologically
                 List<ExceptionReport> reports = await ExceptionsTable.OrderBy(entry => entry.CrashTime).ToListAsync();

@@ -45,7 +45,7 @@ IEnumerable<ChartData>> info = await BigWatson.LoadAppVersionsInfoAsync(report.E
 It is also possible to trim the local exceptions database by setting a maximum number of reports that can be stored:
 
 ```C#
-AsyncOperationResult<IReadOnlyList<ExceptionReport>> deletedReports = await BigWatson.TryTrimAndOptimizeDatabaseAsync(100);
+AsyncOperationResult<IReadOnlyList<ExceptionReport>> deletedReports = await BigWatson.TryTrimAndOptimizeDatabaseAsync(100, CancellationToken.None);
 if (deletedReports) // Check if the status is set to AsyncOperationStatus.RunToCompletion
 {
     // Optionally access the list of deleted reports here...
