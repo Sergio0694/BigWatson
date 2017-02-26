@@ -110,7 +110,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Misc\Extensions.cs" />
     <Compile Include="LittleWatson.cs" />
     <Compile Include="Models\ExceptionReport.cs" />
     <Compile Include="Misc\AsyncOperationResult.cs" />
@@ -118,8 +118,8 @@
     <Compile Include="Models\DatabaseInfo.cs" />
     <Compile Include="Models\JumpListGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SQLiteExceptionsManager.cs" />
-    <Compile Include="SQLiteHelper.cs" />
+    <Compile Include="BigWatson.cs" />
+    <Compile Include="Misc\SQLiteHelper.cs" />
     <EmbeddedResource Include="Properties\BigWatson.rd.xml" />
   </ItemGroup>
   <ItemGroup>

@@ -39,15 +39,6 @@ namespace BigWatson.Misc
         /// <param name="other">The other value to compare</param>
         public bool Equals([CanBeNull] T other) => Result == null && other == null || Result?.Equals(other) == true;
 
-        /// <summary>
-        /// Create a new instance from the given object (can be used for interfaces)
-        /// </summary>
-        /// <param name="value">The result value</param>
-        public static AsyncOperationResult<T> Explicit([CanBeNull] T value)
-        {
-            return new AsyncOperationResult<T>(value, AsyncOperationStatus.RunToCompletion);
-        }
-
         // Implicit cast for the inner result
         public static implicit operator T(AsyncOperationResult<T> wrappedResult) => wrappedResult.Result;
 

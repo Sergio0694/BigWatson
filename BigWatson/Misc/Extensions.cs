@@ -5,7 +5,7 @@ using Windows.Foundation;
 using Windows.Storage;
 using JetBrains.Annotations;
 
-namespace BigWatson
+namespace BigWatson.Misc
 {
     /// <summary>
     /// A simple class with some useful extension methods

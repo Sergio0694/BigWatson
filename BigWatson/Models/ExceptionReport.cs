@@ -103,7 +103,7 @@ namespace BigWatson.Models
             };
         }
 
-        #region Extra parameters
+        #region Additional parameters
 
         /// <summary>
         /// Gets the minimum app version that generated this Exception type

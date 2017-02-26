@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BigWatson.Misc;
 using BigWatson.Models;
 using JetBrains.Annotations;
 using SQLite.Net.Async;
@@ -9,11 +10,10 @@ using SQLite.Net.Async;
 namespace BigWatson
 {
     /// <summary>
-    /// Manages the exceptions database using the SQLiteAsyncConnection class
+    /// Manages the exceptions database
     /// </summary>
-    internal static class SQLiteExceptionsManager
+    public static class BigWatson
     {
-
         #region Constants and parameters
 
         /// <summary>
@@ -45,6 +45,8 @@ namespace BigWatson
 
         #endregion
 
+        #region Tools
+
         /// <summary>
         /// Makes sure the exceptions database is open and connected
         /// </summary>
@@ -54,40 +56,6 @@ namespace BigWatson
             {
                 _DatabaseInfo = await SQLiteSharedHelper.InitializeDatabaseAsync(DatabaseFileName, CleanDatabaseUri);
             }
-        }
-
-        /// <summary>
-        /// Gets the number of task instances that can remain stored on the database
-        /// </summary>
-        private const int MaxLogsCount = 1000;
-
-        /// <summary>
-        /// Makes sure the number of task reports in the database isn't too high
-        /// </summary>
-        public static async Task OptimizeLogsDatabaseAsync()
-        {
-            // Make sure the database is connected
-            await EnsureDatabaseConnectionAsync();
-
-            // Check cleanup required
-            int total = await ExceptionsTable.CountAsync();
-            if (total <= MaxLogsCount) return;
-
-            // Get all the instances and sort them chronologically
-            List<ExceptionReport> reports = await ExceptionsTable.OrderBy(entry => entry.CrashTime).ToListAsync();
-
-            // Delete the required items
-            int deleted = 0, target = total - MaxLogsCount;
-            if (target <= 0) return;
-            foreach (ExceptionReport report in reports)
-            {
-                await DatabaseConnection.DeleteAsync(report);
-                deleted++;
-                if (deleted >= target) break;
-            }
-
-            // Execute the VACUUM command
-            await DatabaseConnection.ExecuteAsync("VACUUM;");
         }
 
         /// <summary>
@@ -102,7 +70,7 @@ namespace BigWatson
         /// <param name="crashTime">The crash time for the new exception to log</param>
         /// <param name="usedMemory">The amount of used memory when the Exception was generated</param>
         [ItemNotNull]
-        public static async Task<ExceptionReport> LogExceptionAsync([NotNull] String type, int hResult, [CanBeNull] String message,
+        internal static async Task<ExceptionReport> LogExceptionAsync([NotNull] String type, int hResult, [CanBeNull] String message,
             [CanBeNull] String source, [CanBeNull] String stackTrace, [NotNull] String appVersion, DateTime crashTime, long usedMemory)
         {
             // Make sure the database is connected
@@ -114,9 +82,18 @@ namespace BigWatson
             return report;
         }
 
+        #endregion
+
+        #region APIs
+
         /// <summary>
         /// Loads the groups with the previous exceptions that were thrown by the app
         /// </summary>
+        /// <returns>A sequence of groups that have a <see cref="ChartData"/> key with the app version and the number of
+        /// exception reports for that release, and a list of <see cref="ExceptionReport"/> with all the available
+        /// reports for each version</returns>
+        [Pure]
+        [PublicAPI]
         public static async Task<IEnumerable<JumpListGroup<ChartData, ExceptionReport>>> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
@@ -132,23 +109,23 @@ namespace BigWatson
                 exception.ExceptionTypeOccurrencies = exceptions.Count(item => item.ExceptionType.Equals(exception.ExceptionType));
 
                 // Exceptions with the same Type
-                ExceptionReport[] sameType = 
+                ExceptionReport[] sameType =
                     (from item in exceptions
-                    where item.ExceptionType.Equals(exception.ExceptionType)
-                    orderby item.CrashTime descending
-                    select item).ToArray();
+                     where item.ExceptionType.Equals(exception.ExceptionType)
+                     orderby item.CrashTime descending
+                     select item).ToArray();
 
                 // Update the crash times for the same Exceptions
                 exception.RecentCrashTime = sameType.First().CrashTime;
                 if (sameType.Length > 1) exception.LessRecentCrashTime = sameType.Last().CrashTime;
 
                 // Get the app versions for this Exception Type
-                String[] versions = 
+                String[] versions =
                     (from entry in sameType
-                    group entry by entry.AppVersion
+                     group entry by entry.AppVersion
                     into version
-                    orderby version.Key
-                    select version.Key).ToArray();
+                     orderby version.Key
+                     select version.Key).ToArray();
 
                 // Update the number of occurrencies and the app version interval
                 exception.MinExceptionVersion = versions.First();
@@ -165,9 +142,9 @@ namespace BigWatson
                 select header.Key;
 
             // Create the output collection
-            IEnumerable<JumpListGroup<ChartData, ExceptionReport>> groupedList = 
+            IEnumerable<JumpListGroup<ChartData, ExceptionReport>> groupedList =
                 from version in appVersions
-                let items = 
+                let items =
                     from exception in exceptions
                     where exception.AppVersion.Equals(version)
                     orderby exception.CrashTime descending
@@ -184,13 +161,19 @@ namespace BigWatson
         /// Returns a set of data with all the app versions that generated the input Exception type
         /// </summary>
         /// <param name="exceptionType">The input Exception type to look for</param>
+        /// <remarks>The <paramref name="exceptionType"/> parameter can be passed by calling the equivalent string of <see cref="Exception.GetType()"/>,
+        /// by manually entering an exception type like "InvalidOperationException" or by passing the type from a loaded <see cref="ExceptionReport"/></remarks>
+        /// <returns>A sequence of <see cref="ChartData"/> instances with the number of occurrences of the given exception type
+        /// for each previous app version</returns>
+        [Pure]
+        [PublicAPI]
         public static async Task<IEnumerable<ChartData>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
             // Get the exceptions with the same Type
             List<ExceptionReport> sameExceptions = await ExceptionsTable.Where(entry => entry.ExceptionType == exceptionType).ToListAsync();
 
             // Group the exceptions with their app version
-            IEnumerable<String> versions = 
+            IEnumerable<String> versions =
                 from exception in sameExceptions
                 group exception by exception.AppVersion
                 into version
@@ -198,10 +181,57 @@ namespace BigWatson
                 select version.Key;
 
             // Return the chart data
-            return 
+            return
                 from version in versions
                 let count = sameExceptions.Count(item => item.AppVersion.Equals(version))
                 select new ChartData(count, version);
         }
+
+        /// <summary>
+        /// Makes sure the number of exception reports in the database isn't too high
+        /// </summary>
+        /// <param name="length">The maximum number of items in the database</param>
+        /// <returns>An <see cref="AsyncOperationResult{T}"/> instance that indicates whether the method execution was successful, 
+        /// and eventually a readonly list of <see cref="ExceptionReport"/> instances that represents the reports that were just deleted</returns>
+        [PublicAPI]
+        public static async Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>>  TryTrimAndOptimizeDatabaseAsync(int length)
+        {
+            // Checks
+            if (length < 0) throw new ArgumentOutOfRangeException("The length must be a positive number");
+
+            // Make sure the database is connected
+            await EnsureDatabaseConnectionAsync();
+
+            try
+            {
+                // Check cleanup required
+                int total = await ExceptionsTable.CountAsync();
+                if (total <= length) return new List<ExceptionReport>();
+
+                // Get all the instances and sort them chronologically
+                List<ExceptionReport> reports = await ExceptionsTable.OrderBy(entry => entry.CrashTime).ToListAsync();
+
+                // Delete the required items
+                int target = total - length;
+                if (target <= 0) return AsyncOperationStatus.InternallyAborted; // This shouldn't happen
+                List<ExceptionReport> deleted = new List<ExceptionReport>();
+                for (int i = 0; i < target; i++)
+                {
+                    ExceptionReport report = reports[i];
+                    await DatabaseConnection.DeleteAsync(report);
+                    deleted.Add(report);
+                }
+
+                // Execute the VACUUM command
+                await DatabaseConnection.ExecuteAsync("VACUUM;");
+                return deleted;
+            }
+            catch
+            {
+                return AsyncOperationStatus.Faulted;
+            }
+        }
+
+        #endregion
     }
 }

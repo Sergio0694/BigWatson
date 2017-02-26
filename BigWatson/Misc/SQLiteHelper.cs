@@ -7,7 +7,7 @@ using SQLite.Net;
 using SQLite.Net.Async;
 using SQLite.Net.Platform.WinRT;
 
-namespace BigWatson
+namespace BigWatson.Misc
 {
     /// <summary>
     /// A static class with some helper methods to manage databases and database connections
@@ -25,23 +25,6 @@ namespace BigWatson
             SQLiteConnectionString connectionString = new SQLiteConnectionString(databasePath, true);
             SQLiteConnectionWithLock connection = new SQLiteConnectionWithLock(platform, connectionString);
             return () => connection;
-        }
-
-        /// <summary>
-        /// Tries to get a database connection to the database at the given path
-        /// </summary>
-        /// <param name="path">The path of the database to open</param>
-        [CanBeNull]
-        public static SQLiteAsyncConnection TryGetSQLiteAsyncConnection([NotNull] String path)
-        {
-            try
-            {
-                return new SQLiteAsyncConnection(PrepareSQLiteConnection(path));
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         // Replaces the local database with the default one (deletes all user changes)

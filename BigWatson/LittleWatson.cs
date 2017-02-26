@@ -11,17 +11,19 @@ using JetBrains.Annotations;
 namespace BigWatson
 {
     /// <summary>
-    /// Manages the error reports if the app crashes
+    /// A static class that contains methods to log and save new exception reports
     /// </summary>
-    public class LittleWatson
+    public static class LittleWatson
     {
+        #region Constants and parameters
+
         // Constants
         private const String LittleWatsonDetails = nameof(LittleWatsonDetails);
 
         /// <summary>
         /// Gets the app current version in the format "Major.Minor.Build.Revision"
         /// </summary>
-        public static String AppVersion
+        private static String AppVersion
         {
             get
             {
@@ -30,12 +32,16 @@ namespace BigWatson
             }
         }
 
+        #endregion
+
+        #region APIs
+
         /// <summary>
         /// Saves the crash report into local storage
         /// </summary>
         /// <param name="ex">Exception that caused the app to crash</param>
         [PublicAPI]
-        public static void ReportException([NotNull] Exception ex)
+        public static void LogException([NotNull] Exception ex)
         {
             // Get the container
             ApplicationData.Current.LocalSettings.CreateContainer(LittleWatsonDetails, ApplicationDataCreateDisposition.Always);
@@ -53,10 +59,15 @@ namespace BigWatson
         }
 
         /// <summary>
-        /// If the app crashed the last time if was opened, reports the error
+        /// Checks for a previous temporary exception report and flushes it into the internal database if possible
         /// </summary>
+        /// <remarks>The status of the returned <see cref="AsyncOperationResult{T}"/> instance will be set to <see cref="AsyncOperationStatus.RunToCompletion"/>
+        /// if a report is not found or if one is found and successfully stored to disk. In this case, the saved report will also be returned.
+        /// In case of an error, the returned status will be set to <see cref="AsyncOperationStatus.Faulted"/></remarks>
+        /// <returns>An <see cref="AsyncOperationResult{T}"/> instance that indicates whether the method execution was successful, 
+        /// and eventually a <see cref="ExceptionReport"/> instance that represents the last thrown exception that was just logged into the database</returns>
         [PublicAPI]
-        public static async Task<AsyncOperationResult<ExceptionReport>> CheckForPreviousExceptionAsync()
+        public static async Task<AsyncOperationResult<ExceptionReport>> TryFlushPreviousExceptionAsync()
         {
             // Get the settings container
             IPropertySet exceptionValues;
@@ -76,7 +87,7 @@ namespace BigWatson
             try
             {
                 // Log the Exception in the database
-                ExceptionReport report = await SQLiteExceptionsManager.LogExceptionAsync(
+                ExceptionReport report = await BigWatson.LogExceptionAsync(
                     exceptionValues[nameof(ExceptionReport.ExceptionType)].To<String>(),
                     exceptionValues[nameof(ExceptionReport.HResult)].To<int>(),
                     exceptionValues[nameof(ExceptionReport.Message)].To<String>(),
@@ -96,5 +107,7 @@ namespace BigWatson
                 return AsyncOperationStatus.Faulted;
             }
         }
+
+        #endregion
     }
 }
