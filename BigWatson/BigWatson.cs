@@ -68,18 +68,18 @@ namespace BigWatson
         /// <param name="message">The optional message of the new Exception</param>
         /// <param name="source">The optional source of the new Exception</param>
         /// <param name="stackTrace">The optional stack trace of the new Exception</param>
-        /// <param name="appVersion">The app version that generated this Exception</param>
+        /// <param name="version">The app version that generated this Exception</param>
         /// <param name="crashTime">The crash time for the new exception to log</param>
         /// <param name="usedMemory">The amount of used memory when the Exception was generated</param>
         [ItemNotNull]
         internal static async Task<ExceptionReport> LogExceptionAsync([NotNull] String type, int hResult, [CanBeNull] String message,
-            [CanBeNull] String source, [CanBeNull] String stackTrace, [NotNull] String appVersion, DateTime crashTime, long usedMemory)
+            [CanBeNull] String source, [CanBeNull] String stackTrace, [NotNull] Version version, DateTime crashTime, long usedMemory)
         {
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();
 
             ExceptionReport report = ExceptionReport.New(type, hResult, message,
-                source, stackTrace, appVersion, crashTime, usedMemory);
+                source, stackTrace, version, crashTime, usedMemory);
             await DatabaseConnection.InsertAsync(report);
             return report;
         }
@@ -91,12 +91,12 @@ namespace BigWatson
         /// <summary>
         /// Loads the groups with the previous exceptions that were thrown by the app
         /// </summary>
-        /// <returns>A sequence of groups that have a <see cref="ChartData"/> key with the app version and the number of
+        /// <returns>A sequence of groups that have a <see cref="VersionExtendedInfo"/> key with the app version and the number of
         /// exception reports for that release, and a list of <see cref="ExceptionReport"/> with all the available
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
-        public static async Task<IEnumerable<JumpListGroup<ChartData, ExceptionReport>>> LoadGroupedExceptionsAsync()
+        public static async Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();
@@ -122,10 +122,10 @@ namespace BigWatson
                 if (sameType.Length > 1) exception.LessRecentCrashTime = sameType.Last().CrashTime;
 
                 // Get the app versions for this Exception Type
-                String[] versions =
+                Version[] versions =
                     (from entry in sameType
                      group entry by entry.AppVersion
-                    into version
+                     into version
                      orderby version.Key
                      select version.Key).ToArray();
 
@@ -135,16 +135,15 @@ namespace BigWatson
             }
 
             // List the available app versions
-            IEnumerable<String> appVersions =
+            IEnumerable<Version> appVersions =
                 from exception in exceptions
                 group exception by exception.AppVersion
                 into header
-                let version = Version.Parse(header.Key)
-                orderby version descending
+                orderby header.Key descending
                 select header.Key;
 
             // Create the output collection
-            IEnumerable<JumpListGroup<ChartData, ExceptionReport>> groupedList =
+            IEnumerable<GroupedList<VersionExtendedInfo, ExceptionReport>> groupedList =
                 from version in appVersions
                 let items =
                     from exception in exceptions
@@ -152,8 +151,8 @@ namespace BigWatson
                     orderby exception.CrashTime descending
                     select exception
                 where items.Any()
-                select new JumpListGroup<ChartData, ExceptionReport>(
-                    new ChartData(items.Count(), version), items);
+                select new GroupedList<VersionExtendedInfo, ExceptionReport>(
+                    new VersionExtendedInfo(items.Count(), version), items);
 
             // Return the exceptions
             return groupedList;
@@ -165,17 +164,17 @@ namespace BigWatson
         /// <param name="exceptionType">The input Exception type to look for</param>
         /// <remarks>The <paramref name="exceptionType"/> parameter can be passed by calling the equivalent string of <see cref="Exception.GetType()"/>,
         /// by manually entering an exception type like "InvalidOperationException" or by passing the type from a loaded <see cref="ExceptionReport"/></remarks>
-        /// <returns>A sequence of <see cref="ChartData"/> instances with the number of occurrences of the given exception type
+        /// <returns>A sequence of <see cref="VersionExtendedInfo"/> instances with the number of occurrences of the given exception type
         /// for each previous app version</returns>
         [Pure]
         [PublicAPI]
-        public static async Task<IEnumerable<ChartData>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
+        public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
             // Get the exceptions with the same Type
             List<ExceptionReport> sameExceptions = await ExceptionsTable.Where(entry => entry.ExceptionType == exceptionType).ToListAsync();
 
             // Group the exceptions with their app version
-            IEnumerable<String> versions =
+            IEnumerable<Version> versions =
                 from exception in sameExceptions
                 group exception by exception.AppVersion
                 into version
@@ -186,7 +185,7 @@ namespace BigWatson
             return
                 from version in versions
                 let count = sameExceptions.Count(item => item.AppVersion.Equals(version))
-                select new ChartData(count, version);
+                select new VersionExtendedInfo(count, version);
         }
 
         /// <summary>
@@ -251,10 +250,9 @@ namespace BigWatson
             if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
 
             // Try to get a copy of the database
-            StorageFile copy;
             try
             {
-                copy = await _DatabaseInfo.File.CopyAsync(ApplicationData.Current.TemporaryFolder,
+                StorageFile copy = await _DatabaseInfo.File.CopyAsync(ApplicationData.Current.TemporaryFolder,
                     $"Exceptions[{DateTime.Now:yy-MM-dd_hh.mm.ss}].db", NameCollisionOption.FailIfExists);
                 if (copy != null) return copy;
                 return AsyncOperationStatus.InternallyAborted;

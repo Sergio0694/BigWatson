@@ -23,12 +23,12 @@ namespace BigWatson
         /// <summary>
         /// Gets the app current version in the format "Major.Minor.Build.Revision"
         /// </summary>
-        private static String AppVersion
+        private static Version AppVersion
         {
             get
             {
                 PackageVersion currentVersion = Package.Current.Id.Version;
-                return $"{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Build}.{currentVersion.Revision}";
+                return new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build, currentVersion.Revision);
             }
         }
 
@@ -53,9 +53,9 @@ namespace BigWatson
             exceptionValues[nameof(ExceptionReport.HResult)] = ex.HResult;
             exceptionValues[nameof(ExceptionReport.Message)] = ex.Message;
             exceptionValues[nameof(ExceptionReport.StackTrace)] = ex.StackTrace;
-            exceptionValues[nameof(ExceptionReport.AppVersion)] = AppVersion;
+            exceptionValues[nameof(ExceptionReport.AppVersion)] = AppVersion.ToString();
             exceptionValues[nameof(ExceptionReport.UsedMemory)] = (long)MemoryManager.AppMemoryUsage;
-            exceptionValues[nameof(ExceptionReport.CrashDateTime)] = DateTime.Now.ToBinary();
+            exceptionValues[nameof(ExceptionReport.CrashTime)] = DateTime.Now.ToBinary();
         }
 
         /// <summary>
@@ -93,8 +93,8 @@ namespace BigWatson
                     exceptionValues[nameof(ExceptionReport.Message)].To<String>(),
                     exceptionValues[nameof(ExceptionReport.Source)].To<String>(),
                     exceptionValues[nameof(ExceptionReport.StackTrace)].To<String>(),
-                    exceptionValues[nameof(ExceptionReport.AppVersion)].To<String>(),
-                    DateTime.FromBinary(exceptionValues[nameof(ExceptionReport.CrashDateTime)].To<long>()),
+                    new Version(exceptionValues[nameof(ExceptionReport.AppVersion)].To<String>()), 
+                    DateTime.FromBinary(exceptionValues[nameof(ExceptionReport.CrashTime)].To<long>()),
                     exceptionValues[nameof(ExceptionReport.UsedMemory)].To<long>());
 
                 // Delete the previous report

@@ -114,9 +114,9 @@
     <Compile Include="LittleWatson.cs" />
     <Compile Include="Models\ExceptionReport.cs" />
     <Compile Include="Misc\AsyncOperationResult.cs" />
-    <Compile Include="Models\ChartData.cs" />
+    <Compile Include="Models\VersionExtendedInfo.cs" />
     <Compile Include="Models\DatabaseInfo.cs" />
-    <Compile Include="Models\JumpListGroup.cs" />
+    <Compile Include="Models\GroupedList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BigWatson.cs" />
     <Compile Include="Misc\SQLiteHelper.cs" />

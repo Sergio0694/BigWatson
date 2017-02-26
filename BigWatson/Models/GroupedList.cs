@@ -9,16 +9,12 @@ namespace BigWatson.Models
     /// </summary>
     /// <typeparam name="TKey">The type of the group key</typeparam>
     /// <typeparam name="TItems">The type of the items in the group</typeparam>
-    public sealed class JumpListGroup<TKey, TItems> : List<TItems>
+    internal sealed class GroupedList<TKey, TItems> : List<TItems>, IGrouping<TKey, TItems>
     {
-        internal JumpListGroup([NotNull] TKey key, [CanBeNull] IEnumerable<TItems> collection) : base(collection ?? new List<TItems>())
+        // Initializes a new instance with the input key and collection
+        public GroupedList([NotNull] TKey key, [CanBeNull] IEnumerable<TItems> collection) : base(collection ?? new List<TItems>())
         {
             Key = key;
-        }
-
-        internal JumpListGroup([NotNull] IGrouping<TKey, TItems> collection) : base(collection)
-        {
-            Key = collection.Key;
         }
 
         /// <summary>

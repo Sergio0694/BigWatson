@@ -32,14 +32,14 @@ AsyncOperationResult<ExceptionReport> result = await LittleWatson.TryFlushPrevio
 It is possible to load the complete list of previous exception reports, sorted by app versions, using:
 
 ```C#
-IEnumerable<JumpListGroup<ChartData, ExceptionReport>> reports = await BigWatson.LoadGroupedExceptionsAsync();
+IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> reports = await BigWatson.LoadGroupedExceptionsAsync();
 ```
 
 To load additional versions info for a specific exception type, use this method:
 
 ```C#
 // Assuming we have an ExceptionReport here
-IEnumerable<ChartData>> info = await BigWatson.LoadAppVersionsInfoAsync(report.ExceptionType);
+IEnumerable<VersionExtendedInfo>> info = await BigWatson.LoadAppVersionsInfoAsync(report.ExceptionType);
 ```
 
 It is also possible to trim the local exceptions database by setting a maximum number of reports that can be stored:
