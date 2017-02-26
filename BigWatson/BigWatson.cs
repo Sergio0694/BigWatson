@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage;
 using BigWatson.Misc;
 using BigWatson.Models;
 using JetBrains.Annotations;
@@ -230,6 +231,33 @@ namespace BigWatson
                 // Execute the VACUUM command
                 await DatabaseConnection.ExecuteAsync("VACUUM;");
                 return deleted;
+            }
+            catch
+            {
+                return AsyncOperationStatus.Faulted;
+            }
+        }
+
+        /// <summary>
+        /// Returns a copy of the local exceptions database that can easily be exported from the app
+        /// </summary>
+        /// <param name="token">The cancellation token for the operation</param>
+        [Pure]
+        [PublicAPI]
+        public static async Task<AsyncOperationResult<StorageFile>> ExportLogsAsync(CancellationToken token)
+        {
+            // Connect to the existing database
+            await EnsureDatabaseConnectionAsync();
+            if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
+
+            // Try to get a copy of the database
+            StorageFile copy;
+            try
+            {
+                copy = await _DatabaseInfo.File.CopyAsync(ApplicationData.Current.TemporaryFolder,
+                    $"Exceptions[{DateTime.Now:yy-MM-dd_hh.mm.ss}].db", NameCollisionOption.FailIfExists);
+                if (copy != null) return copy;
+                return AsyncOperationStatus.InternallyAborted;
             }
             catch
             {
