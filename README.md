@@ -61,3 +61,7 @@ The library uses the following libraries and NuGet packages:
 * [SQLite.Net-PCL](https://www.nuget.org/packages/SQLite.Net.Core-PCL/)
 * [SQLite.Net-Core-PCL](https://www.nuget.org/packages/SQLite.Net.Core-PCL/)
 * [JetBrains.Annotations](https://www.nuget.org/packages/JetBrains.Annotations)
+
+## Credits
+
+BigWatson UWP is an extension of the [LittleWatson](https://www.alexhardwicke.com/little-watson/) class by Alex Hardwicke. In addition to that, this updated library also includes an internal SQLite database to store and retrieve previous logs.
