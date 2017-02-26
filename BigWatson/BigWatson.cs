@@ -5,7 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using BigWatson.Misc;
-using BigWatson.Models;
+using BigWatson.Shared.Misc;
+using BigWatson.Shared.Models;
 using JetBrains.Annotations;
 using SQLite.Net.Async;
 

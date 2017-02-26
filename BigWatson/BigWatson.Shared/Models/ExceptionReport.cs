@@ -3,7 +3,7 @@ using System.Text;
 using SQLite.Net.Attributes;
 using CanBeNull = JetBrains.Annotations.CanBeNullAttribute;
 
-namespace BigWatson.Models
+namespace BigWatson.Shared.Models
 {
     /// <summary>
     /// A class that maps the database table used to store app crashes
@@ -132,7 +132,7 @@ namespace BigWatson.Models
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append(String.Format("{0} {1}", ExceptionTypeOccurrencies, ExceptionTypeOccurrencies == 1 ? "time" : "times"));
+                sb.Append($"{ExceptionTypeOccurrencies} {(ExceptionTypeOccurrencies == 1 ? "time" : "times")}");
                 sb.Append(", ");
                 sb.Append(MaxExceptionVersion == null
                     ? $"in version {MinExceptionVersion}" 

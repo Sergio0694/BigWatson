@@ -4,8 +4,8 @@ using Windows.ApplicationModel;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.System;
-using BigWatson.Misc;
-using BigWatson.Models;
+using BigWatson.Shared.Misc;
+using BigWatson.Shared.Models;
 using JetBrains.Annotations;
 
 namespace BigWatson

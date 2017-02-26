@@ -1,4 +1,7 @@
 # Build and Release Folders
 BigWatson/bin
 BigWatson/obj
+BigWatson.PCL/bin
+BigWatson.PCL/obj
+**/packages
 **/.suo

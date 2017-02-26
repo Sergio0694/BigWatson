@@ -1,17 +1,17 @@
-﻿using Windows.Storage;
-using SQLite.Net.Async;
+﻿using SQLite.Net.Async;
 
-namespace BigWatson.Models
+namespace BigWatson.Shared.Models
 {
     /// <summary>
     /// A class that wraps useful info for a database file in use
     /// </summary>
-    public sealed class DatabaseInfo
+    /// <typeparam name="T">The type that represents the database file in use</typeparam>
+    public abstract class DatabaseInfoBase<T> where T : class
     {
         /// <summary>
         /// Gets the database file
         /// </summary>
-        public StorageFile File { get; }
+        public T File { get; }
 
         /// <summary>
         /// Gets an open async connection to the database file
@@ -24,7 +24,7 @@ namespace BigWatson.Models
         public bool LoadedExistingDatabase { get; }
 
         // Internal constructor
-        internal DatabaseInfo(StorageFile file, SQLiteAsyncConnection connection, bool loadedExisting)
+        internal DatabaseInfoBase(T file, SQLiteAsyncConnection connection, bool loadedExisting)
         {
             File = file;
             Connection = connection;

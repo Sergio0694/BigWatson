@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Windows.Storage;
-using BigWatson.Models;
 using JetBrains.Annotations;
 using SQLite.Net;
 using SQLite.Net.Async;
