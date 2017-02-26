@@ -57,6 +57,40 @@ namespace BigWatson
         }
 
         /// <summary>
+        /// Gets the number of task instances that can remain stored on the database
+        /// </summary>
+        private const int MaxLogsCount = 1000;
+
+        /// <summary>
+        /// Makes sure the number of task reports in the database isn't too high
+        /// </summary>
+        public static async Task OptimizeLogsDatabaseAsync()
+        {
+            // Make sure the database is connected
+            await EnsureDatabaseConnectionAsync();
+
+            // Check cleanup required
+            int total = await ExceptionsTable.CountAsync();
+            if (total <= MaxLogsCount) return;
+
+            // Get all the instances and sort them chronologically
+            List<ExceptionReport> reports = await ExceptionsTable.OrderBy(entry => entry.CrashTime).ToListAsync();
+
+            // Delete the required items
+            int deleted = 0, target = total - MaxLogsCount;
+            if (target <= 0) return;
+            foreach (ExceptionReport report in reports)
+            {
+                await DatabaseConnection.DeleteAsync(report);
+                deleted++;
+                if (deleted >= target) break;
+            }
+
+            // Execute the VACUUM command
+            await DatabaseConnection.ExecuteAsync("VACUUM;");
+        }
+
+        /// <summary>
         /// Logs the given Exception into the local database
         /// </summary>
         /// <param name="type">The type of thee new Exception</param>
@@ -83,7 +117,7 @@ namespace BigWatson
         /// <summary>
         /// Loads the groups with the previous exceptions that were thrown by the app
         /// </summary>
-        public static async Task<IEnumerable<JumpListGroup<Tuple<String, int>, ExceptionReport>>> LoadGroupedExceptionsAsync()
+        public static async Task<IEnumerable<JumpListGroup<ChartData, ExceptionReport>>> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();
@@ -131,7 +165,7 @@ namespace BigWatson
                 select header.Key;
 
             // Create the output collection
-            IEnumerable<JumpListGroup<Tuple<String, int>, ExceptionReport>> groupedList = 
+            IEnumerable<JumpListGroup<ChartData, ExceptionReport>> groupedList = 
                 from version in appVersions
                 let items = 
                     from exception in exceptions
@@ -139,8 +173,8 @@ namespace BigWatson
                     orderby exception.CrashTime descending
                     select exception
                 where items.Any()
-                select new JumpListGroup<Tuple<String, int>, ExceptionReport>(
-                    Tuple.Create<String, int>(version, items.Count()), items);
+                select new JumpListGroup<ChartData, ExceptionReport>(
+                    new ChartData(items.Count(), version), items);
 
             // Return the exceptions
             return groupedList;
