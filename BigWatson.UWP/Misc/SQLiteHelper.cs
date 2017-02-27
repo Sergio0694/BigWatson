@@ -6,7 +6,7 @@ using SQLite.Net;
 using SQLite.Net.Async;
 using SQLite.Net.Platform.WinRT;
 
-namespace BigWatson.Misc
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
     /// A static class with some helper methods to manage databases and database connections

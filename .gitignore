@@ -1,6 +1,6 @@
 # Build and Release Folders
-BigWatson/bin
-BigWatson/obj
+BigWatson.UWP/bin
+BigWatson.UWP/obj
 BigWatson.PCL/bin
 BigWatson.PCL/obj
 **/packages

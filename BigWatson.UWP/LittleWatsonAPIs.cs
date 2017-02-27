@@ -8,7 +8,7 @@ using BigWatson.Shared.Misc;
 using BigWatson.Shared.Models;
 using JetBrains.Annotations;
 
-namespace BigWatson
+namespace BigWatson.UWP
 {
     /// <summary>
     /// A static class that contains methods to log and save new exception reports

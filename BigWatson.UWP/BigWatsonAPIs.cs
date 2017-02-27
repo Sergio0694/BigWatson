@@ -4,14 +4,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
-using BigWatson.Misc;
 using BigWatson.Shared;
 using BigWatson.Shared.Misc;
 using BigWatson.Shared.Models;
+using BigWatson.UWP.Misc;
 using JetBrains.Annotations;
 using SQLite.Net.Async;
 
-namespace BigWatson
+namespace BigWatson.UWP
 {
     /// <summary>
     /// Manages the exceptions database

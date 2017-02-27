@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWatson", "BigWatson.csproj", "{F3A11894-F124-4A25-8F39-980A0897AA10}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWatson.UWP", "BigWatson.UWP.csproj", "{F3A11894-F124-4A25-8F39-980A0897AA10}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWatson.PCL", "..\BigWatson.PCL\BigWatson.PCL.csproj", "{27B66326-7A00-402B-8834-D56BC12DFB28}"
 EndProject

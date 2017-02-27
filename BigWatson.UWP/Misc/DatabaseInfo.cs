@@ -2,7 +2,7 @@
 using BigWatson.Shared.Models;
 using SQLite.Net.Async;
 
-namespace BigWatson.Misc
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
     /// A class that wraps useful info for a database file in use on the UWP platform

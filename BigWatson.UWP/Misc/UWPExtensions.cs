@@ -3,10 +3,10 @@ using System.IO;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Storage;
-using JetBrains.Annotations;
 using BigWatson.Shared.Misc;
+using JetBrains.Annotations;
 
-namespace BigWatson.Misc
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
     /// A simple class with some useful extension methods
