@@ -18,17 +18,11 @@ namespace BigWatson.Shared.Models
         /// </summary>
         public SQLiteAsyncConnection Connection { get; }
 
-        /// <summary>
-        /// Gets whether or not the database retrieved was already existing in the target directory
-        /// </summary>
-        public bool LoadedExistingDatabase { get; }
-
         // Internal constructor
-        internal DatabaseInfoBase(T file, SQLiteAsyncConnection connection, bool loadedExisting)
+        internal DatabaseInfoBase(T file, SQLiteAsyncConnection connection)
         {
             File = file;
             Connection = connection;
-            LoadedExistingDatabase = loadedExisting;
         }
     }
 }

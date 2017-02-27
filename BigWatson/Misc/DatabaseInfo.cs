@@ -9,8 +9,16 @@ namespace BigWatson.Misc
     /// </summary>
     public sealed class DatabaseInfo : DatabaseInfoBase<StorageFile>
     {
+        /// <summary>
+        /// Gets whether or not the database retrieved was already existing in the target directory
+        /// </summary>
+        public bool LoadedExistingDatabase { get; }
+
         // Internal constructor
         internal DatabaseInfo(StorageFile file, SQLiteAsyncConnection connection, bool loadedExisting)
-            : base(file, connection, loadedExisting) { }
+            : base(file, connection)
+        {
+            LoadedExistingDatabase = loadedExisting;
+        }
     }
 }
