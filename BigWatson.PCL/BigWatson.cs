@@ -17,7 +17,7 @@ namespace BigWatson.PCL
     /// <summary>
     /// Manages the exceptions database
     /// </summary>
-    public static class BigWatson
+    internal static class BigWatson
     {
         #region Constants and parameters
 
@@ -110,7 +110,7 @@ namespace BigWatson.PCL
         /// <param name="crashTime">The crash time for the new exception to log</param>
         /// <param name="usedMemory">The amount of used memory when the Exception was generated</param>
         [ItemNotNull]
-        internal static async Task<ExceptionReport> LogExceptionAsync([NotNull] String type, int hResult, [CanBeNull] String message,
+        public static async Task<ExceptionReport> LogExceptionAsync([NotNull] String type, int hResult, [CanBeNull] String message,
             [CanBeNull] String source, [CanBeNull] String stackTrace, [NotNull] Version version, DateTime crashTime, long usedMemory)
         {
             // Make sure the database is connected
@@ -126,12 +126,7 @@ namespace BigWatson.PCL
 
         #region APIs
 
-        /// <summary>
-        /// Loads the groups with the previous exceptions that were thrown by the app
-        /// </summary>
-        /// <returns>A sequence of groups that have a <see cref="VersionExtendedInfo"/> key with the app version and the number of
-        /// exception reports for that release, and a list of <see cref="ExceptionReport"/> with all the available
-        /// reports for each version</returns>
+        // Loads the groups with the previous exceptions that were thrown by the app
         [Pure]
         [PublicAPI]
         public static async Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
@@ -196,14 +191,7 @@ namespace BigWatson.PCL
             return groupedList;
         }
 
-        /// <summary>
-        /// Returns a set of data with all the app versions that generated the input Exception type
-        /// </summary>
-        /// <param name="exceptionType">The input Exception type to look for</param>
-        /// <remarks>The <paramref name="exceptionType"/> parameter can be passed by calling the equivalent string of <see cref="Exception.GetType()"/>,
-        /// by manually entering an exception type like "InvalidOperationException" or by passing the type from a loaded <see cref="ExceptionReport"/></remarks>
-        /// <returns>A sequence of <see cref="VersionExtendedInfo"/> instances with the number of occurrences of the given exception type
-        /// for each previous app version</returns>
+        // Returns a set of data with all the app versions that generated the input Exception type
         [Pure]
         [PublicAPI]
         public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
@@ -226,13 +214,7 @@ namespace BigWatson.PCL
                 select new VersionExtendedInfo(count, version);
         }
 
-        /// <summary>
-        /// Makes sure the number of exception reports in the database isn't too high
-        /// </summary>
-        /// <param name="length">The maximum number of items in the database</param>
-        /// <param name="token">The cancellation token for the operation</param>
-        /// <returns>An <see cref="AsyncOperationResult{T}"/> instance that indicates whether the method execution was successful, 
-        /// and eventually a readonly list of <see cref="ExceptionReport"/> instances that represents the reports that were just deleted</returns>
+        // Makes sure the number of exception reports in the database isn't too high
         [PublicAPI]
         public static async Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>> TryTrimAndOptimizeDatabaseAsync(int length, CancellationToken token)
         {
@@ -275,31 +257,6 @@ namespace BigWatson.PCL
             }
         }
 
-        /// <summary>
-        /// Returns a copy of the local exceptions database that can easily be exported from the app
-        /// </summary>
-        /// <param name="token">The cancellation token for the operation</param>
-        [Pure]
-        [PublicAPI]
-        public static async Task<AsyncOperationResult<StorageFile>> ExportLogsAsync(CancellationToken token)
-        {
-            // Connect to the existing database
-            await EnsureDatabaseConnectionAsync();
-            if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
-
-            // Try to get a copy of the database
-            try
-            {
-                StorageFile copy = await _DatabaseInfo.File.CopyAsync(ApplicationData.Current.TemporaryFolder,
-                    $"Exceptions[{DateTime.Now:yy-MM-dd_hh.mm.ss}].db", NameCollisionOption.FailIfExists);
-                if (copy != null) return copy;
-                return AsyncOperationStatus.InternallyAborted;
-            }
-            catch
-            {
-                return AsyncOperationStatus.Faulted;
-            }
-        }
-
         #endregion
     }
+}

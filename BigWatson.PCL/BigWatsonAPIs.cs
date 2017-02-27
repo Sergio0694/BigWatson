@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BigWatson.PCL.Helpers;
 using BigWatson.PCL.Misc;
@@ -101,11 +103,44 @@ namespace BigWatson.PCL
         #region Debugging APIs
 
         /// <summary>
-        /// Loads all the exception reports currently stored on the device
+        /// Loads the groups with the previous exceptions that were thrown by the app
         /// </summary>
-        public static Task<IEnumerable<JumpListGroup<ExceptionsGroup, ExceptionReportDebugInfo>>> LoadExceptionReportsAsync()
+        /// <returns>A sequence of groups that have a <see cref="VersionExtendedInfo"/> key with the app version and the number of
+        /// exception reports for that release, and a list of <see cref="ExceptionReport"/> with all the available
+        /// reports for each version</returns>
+        [Pure]
+        [PublicAPI]
+        public static Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
         {
-            return SQLiteManager.LoadSavedExceptionReportsAsync();
+            return BigWatson.LoadGroupedExceptionsAsync();
+        }
+
+        /// <summary>
+        /// Returns a set of data with all the app versions that generated the input Exception type
+        /// </summary>
+        /// <param name="exceptionType">The input Exception type to look for</param>
+        /// <remarks>The <paramref name="exceptionType"/> parameter can be passed by calling the equivalent string of <see cref="Exception.GetType()"/>,
+        /// by manually entering an exception type like "InvalidOperationException" or by passing the type from a loaded <see cref="ExceptionReport"/></remarks>
+        /// <returns>A sequence of <see cref="VersionExtendedInfo"/> instances with the number of occurrences of the given exception type
+        /// for each previous app version</returns>
+        [Pure]
+        [PublicAPI]
+        public static Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
+        {
+            return BigWatson.LoadAppVersionsInfoAsync(exceptionType);
+        }
+
+        /// <summary>
+        /// Makes sure the number of exception reports in the database isn't too high
+        /// </summary>
+        /// <param name="length">The maximum number of items in the database</param>
+        /// <param name="token">The cancellation token for the operation</param>
+        /// <returns>An <see cref="AsyncOperationResult{T}"/> instance that indicates whether the method execution was successful, 
+        /// and eventually a readonly list of <see cref="ExceptionReport"/> instances that represents the reports that were just deleted</returns>
+        [PublicAPI]
+        public static Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>> TryTrimAndOptimizeDatabaseAsync(int length, CancellationToken token)
+        {
+            return BigWatson.TryTrimAndOptimizeDatabaseAsync(length, token);
         }
 
         #endregion
