@@ -3,22 +3,16 @@ using System.IO;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Storage;
+using BigWatson.Shared.Misc;
 using JetBrains.Annotations;
 
-namespace BigWatson.Misc
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
     /// A simple class with some useful extension methods
     /// </summary>
-    internal static class Extensions
+    internal static class UWPExtensions
     {
-        /// <summary>
-        /// Performs an explicit cast on the given object
-        /// </summary>
-        /// <typeparam name="T">The type to cast the object to</typeparam>
-        /// <param name="item">The object to cast</param>
-        public static T To<T>(this object item) => (T)item;
-
         // Private core copy method
         private static async Task CopyFileContentAsync([NotNull] Stream source, [NotNull] Stream target)
         {
@@ -61,12 +55,6 @@ namespace BigWatson.Misc
                 localCopy.DeleteAsync(StorageDeleteOption.PermanentDelete).AsTask().Forget();
             }
         }
-
-        /// <summary>
-        /// Forgets a given task without raising any warnings
-        /// </summary>
-        /// <param name="task">The task to forget</param>
-        public static void Forget(this Task task) { }
 
         /// <summary>
         /// Creates a new copy of the input file in the desired folder

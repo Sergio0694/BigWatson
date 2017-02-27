@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWatson.UWP", "BigWatson.UWP.csproj", "{F3A11894-F124-4A25-8F39-980A0897AA10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWatson.PCL", "..\BigWatson.PCL\BigWatson.PCL.csproj", "{27B66326-7A00-402B-8834-D56BC12DFB28}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BigWatson.Shared", "BigWatson.Shared\BigWatson.Shared.shproj", "{DC39756B-4861-4F36-90A2-1AAFED3DA4F8}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BigWatson.Shared\BigWatson.Shared.projitems*{27b66326-7a00-402b-8834-d56bc12dfb28}*SharedItemsImports = 4
+		BigWatson.Shared\BigWatson.Shared.projitems*{dc39756b-4861-4f36-90a2-1aafed3da4f8}*SharedItemsImports = 13
+		BigWatson.Shared\BigWatson.Shared.projitems*{f3a11894-f124-4a25-8f39-980a0897aa10}*SharedItemsImports = 4
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|ARM.ActiveCfg = Debug|ARM
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|ARM.Build.0 = Debug|ARM
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|x64.ActiveCfg = Debug|x64
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|x64.Build.0 = Debug|x64
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|x86.ActiveCfg = Debug|x86
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Debug|x86.Build.0 = Debug|x86
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|ARM.ActiveCfg = Release|ARM
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|ARM.Build.0 = Release|ARM
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|x64.ActiveCfg = Release|x64
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|x64.Build.0 = Release|x64
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|x86.ActiveCfg = Release|x86
+		{F3A11894-F124-4A25-8F39-980A0897AA10}.Release|x86.Build.0 = Release|x86
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|ARM.Build.0 = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|x64.Build.0 = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Debug|x86.Build.0 = Debug|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|ARM.ActiveCfg = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|ARM.Build.0 = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|x64.ActiveCfg = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|x64.Build.0 = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|x86.ActiveCfg = Release|Any CPU
+		{27B66326-7A00-402B-8834-D56BC12DFB28}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

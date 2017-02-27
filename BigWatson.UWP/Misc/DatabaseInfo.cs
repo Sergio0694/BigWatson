@@ -1,23 +1,14 @@
 ﻿using Windows.Storage;
+using BigWatson.Shared.Models;
 using SQLite.Net.Async;
 
-namespace BigWatson.Models
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
-    /// A class that wraps useful info for a database file in use
+    /// A class that wraps useful info for a database file in use on the UWP platform
     /// </summary>
-    public sealed class DatabaseInfo
+    public sealed class DatabaseInfo : DatabaseInfoBase<StorageFile>
     {
-        /// <summary>
-        /// Gets the database file
-        /// </summary>
-        public StorageFile File { get; }
-
-        /// <summary>
-        /// Gets an open async connection to the database file
-        /// </summary>
-        public SQLiteAsyncConnection Connection { get; }
-
         /// <summary>
         /// Gets whether or not the database retrieved was already existing in the target directory
         /// </summary>
@@ -25,9 +16,8 @@ namespace BigWatson.Models
 
         // Internal constructor
         internal DatabaseInfo(StorageFile file, SQLiteAsyncConnection connection, bool loadedExisting)
+            : base(file, connection)
         {
-            File = file;
-            Connection = connection;
             LoadedExistingDatabase = loadedExisting;
         }
     }

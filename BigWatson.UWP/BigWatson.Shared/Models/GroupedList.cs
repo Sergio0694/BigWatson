@@ -2,10 +2,10 @@
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatson.Models
+namespace BigWatson.Shared.Models
 {
     /// <summary>
-    /// A class that represents a single group of data that can be displayed in a <see cref="Windows.UI.Xaml.Controls.SemanticZoom"/>
+    /// A class that represents a single group of data to display to the end user
     /// </summary>
     /// <typeparam name="TKey">The type of the group key</typeparam>
     /// <typeparam name="TItems">The type of the items in the group</typeparam>

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Windows.Storage;
-using BigWatson.Models;
 using JetBrains.Annotations;
 using SQLite.Net;
 using SQLite.Net.Async;
 using SQLite.Net.Platform.WinRT;
 
-namespace BigWatson.Misc
+namespace BigWatson.UWP.Misc
 {
     /// <summary>
     /// A static class with some helper methods to manage databases and database connections

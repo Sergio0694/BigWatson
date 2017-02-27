@@ -7,8 +7,8 @@
     <ProjectGuid>{F3A11894-F124-4A25-8F39-980A0897AA10}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BigWatson</RootNamespace>
-    <AssemblyName>BigWatson</AssemblyName>
+    <RootNamespace>BigWatson.UWP</RootNamespace>
+    <AssemblyName>BigWatson.UWP</AssemblyName>
     <DefaultLanguage>it-IT</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
@@ -110,15 +110,11 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Misc\Extensions.cs" />
-    <Compile Include="LittleWatson.cs" />
-    <Compile Include="Models\ExceptionReport.cs" />
-    <Compile Include="Misc\AsyncOperationResult.cs" />
-    <Compile Include="Models\VersionExtendedInfo.cs" />
-    <Compile Include="Models\DatabaseInfo.cs" />
-    <Compile Include="Models\GroupedList.cs" />
+    <Compile Include="Misc\DatabaseInfo.cs" />
+    <Compile Include="Misc\UWPExtensions.cs" />
+    <Compile Include="LittleWatsonAPIs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BigWatson.cs" />
+    <Compile Include="BigWatsonAPIs.cs" />
     <Compile Include="Misc\SQLiteHelper.cs" />
     <EmbeddedResource Include="Properties\BigWatson.rd.xml" />
   </ItemGroup>
@@ -131,6 +127,7 @@
     </SDKReference>
   </ItemGroup>
   <ItemGroup />
+  <Import Project="BigWatson.Shared\BigWatson.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
-using BigWatson.Misc;
-using BigWatson.Models;
+using BigWatson.Shared;
+using BigWatson.Shared.Misc;
+using BigWatson.Shared.Models;
+using BigWatson.UWP.Misc;
 using JetBrains.Annotations;
 using SQLite.Net.Async;
 
-namespace BigWatson
+namespace BigWatson.UWP
 {
     /// <summary>
     /// Manages the exceptions database
@@ -102,60 +104,7 @@ namespace BigWatson
             await EnsureDatabaseConnectionAsync();
 
             // Get all the app versions and the exceptions
-            List<ExceptionReport> exceptions = await ExceptionsTable.ToListAsync();
-
-            // Update the type occurrencies and the other info
-            foreach (ExceptionReport exception in exceptions)
-            {
-                // Number of times this same Exception was thrown
-                exception.ExceptionTypeOccurrencies = exceptions.Count(item => item.ExceptionType.Equals(exception.ExceptionType));
-
-                // Exceptions with the same Type
-                ExceptionReport[] sameType =
-                    (from item in exceptions
-                     where item.ExceptionType.Equals(exception.ExceptionType)
-                     orderby item.CrashTime descending
-                     select item).ToArray();
-
-                // Update the crash times for the same Exceptions
-                exception.RecentCrashTime = sameType.First().CrashTime;
-                if (sameType.Length > 1) exception.LessRecentCrashTime = sameType.Last().CrashTime;
-
-                // Get the app versions for this Exception Type
-                Version[] versions =
-                    (from entry in sameType
-                     group entry by entry.AppVersion
-                     into version
-                     orderby version.Key
-                     select version.Key).ToArray();
-
-                // Update the number of occurrencies and the app version interval
-                exception.MinExceptionVersion = versions.First();
-                if (versions.Length > 1) exception.MaxExceptionVersion = versions.Last();
-            }
-
-            // List the available app versions
-            IEnumerable<Version> appVersions =
-                from exception in exceptions
-                group exception by exception.AppVersion
-                into header
-                orderby header.Key descending
-                select header.Key;
-
-            // Create the output collection
-            IEnumerable<GroupedList<VersionExtendedInfo, ExceptionReport>> groupedList =
-                from version in appVersions
-                let items =
-                    from exception in exceptions
-                    where exception.AppVersion.Equals(version)
-                    orderby exception.CrashTime descending
-                    select exception
-                where items.Any()
-                select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                    new VersionExtendedInfo(items.Count(), version), items);
-
-            // Return the exceptions
-            return groupedList;
+            return await SQLiteReportsExtractor.LoadGroupedExceptionsAsync(ExceptionsTable);
         }
 
         /// <summary>
@@ -170,22 +119,11 @@ namespace BigWatson
         [PublicAPI]
         public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
+            // Make sure the database is connected
+            await EnsureDatabaseConnectionAsync();
+
             // Get the exceptions with the same Type
-            List<ExceptionReport> sameExceptions = await ExceptionsTable.Where(entry => entry.ExceptionType == exceptionType).ToListAsync();
-
-            // Group the exceptions with their app version
-            IEnumerable<Version> versions =
-                from exception in sameExceptions
-                group exception by exception.AppVersion
-                into version
-                orderby version.Key
-                select version.Key;
-
-            // Return the chart data
-            return
-                from version in versions
-                let count = sameExceptions.Count(item => item.AppVersion.Equals(version))
-                select new VersionExtendedInfo(count, version);
+            return await SQLiteReportsExtractor.LoadAppVersionsInfoAsync(ExceptionsTable, exceptionType);
         }
 
         /// <summary>
@@ -206,35 +144,8 @@ namespace BigWatson
             await EnsureDatabaseConnectionAsync();
             if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
 
-            try
-            {
-                // Check cleanup required
-                int total = await ExceptionsTable.CountAsync();
-                if (total <= length) return new List<ExceptionReport>();
-                if (token.IsCancellationRequested) return AsyncOperationStatus.Canceled;
-
-                // Get all the instances and sort them chronologically
-                List<ExceptionReport> reports = await ExceptionsTable.OrderBy(entry => entry.CrashTime).ToListAsync();
-
-                // Delete the required items
-                int target = total - length;
-                if (target <= 0) return AsyncOperationStatus.InternallyAborted; // This shouldn't happen
-                List<ExceptionReport> deleted = new List<ExceptionReport>();
-                for (int i = 0; i < target; i++)
-                {
-                    ExceptionReport report = reports[i];
-                    await DatabaseConnection.DeleteAsync(report);
-                    deleted.Add(report);
-                }
-
-                // Execute the VACUUM command
-                await DatabaseConnection.ExecuteAsync("VACUUM;");
-                return deleted;
-            }
-            catch
-            {
-                return AsyncOperationStatus.Faulted;
-            }
+            // Perform the optimization
+            return await SQLiteReportsExtractor.TryTrimAndOptimizeDatabaseAsync(ExceptionsTable, DatabaseConnection, length, token);
         }
 
         /// <summary>

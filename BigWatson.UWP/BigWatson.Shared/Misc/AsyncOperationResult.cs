@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace BigWatson.Misc
+namespace BigWatson.Shared.Misc
 {
     /// <summary>
     /// A struct that wraps the result of a safe async operation
