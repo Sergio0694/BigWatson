@@ -1,12 +1,26 @@
 # BigWatson
 
-A UWP library to easily log and review offline exception reports for an app.
+A UWP/PCL library to easily log and review offline exception reports for an app.
 
-This library is written in C# and can be used in any UWP application, with build 10240 as the minimum SDK version.
+This library is written in C# and includes two main projects:
+
+- BigWatson.UWP can be used in any **UWP** application, with build 10240 as the minimum SDK version
+- BigWatson.PCL targets **.NET >= 4.5**, **WP8.1**, **W8**, **Xamarin** (iOS, Android...) and **ASP.NET Core 1.0**
 
 ## Usage
 
 The library exposes various APIs to easily log exceptions and then manage the logs database.
+
+### Initialization
+
+In order to use the BigWatson.PCL library, it is necessary to create a class that implements the `ISettingsManager` interface, to manage the local settings in a synchronous way, then create a platform-specific instance of the `ISQLitePlatform` interface (using the appropriate SQLite library) and a `MemoryReporter` delegate instance that will check the used amount of memory for the app.
+Then use this call at the app startup:
+
+```C#
+BigWatsonAPIs.InitializeLibrary(sqlitePlatform, settingsManager, appVersion, memoryReporter);
+```
+
+**Note**: these steps above are only required with the BigWatson.PCL library.
 
 ### Setup
 
@@ -52,15 +66,18 @@ if (deletedReports) // Check if the status is set to AsyncOperationStatus.RunToC
 }
 ```
 
+**Note**: when using the BigWatson.PCL library, instead of two separate `BigWatson` and `LittleWatson` classes, a single `BigWatsonAPIs` class will be exposed with all the methods above.
+
 ## Dependencies
 
-The library uses the following libraries and NuGet packages:
+The libraries use the following libraries and NuGet packages:
 
 * [SQLite for UWP](https://marketplace.visualstudio.com/items?itemName=SQLiteDevelopmentTeam.SQLiteforUniversalWindowsPlatform)
 * [SQLite.Net.Async-PCL](https://www.nuget.org/packages/SQLite.Net.Async-PCL/)
 * [SQLite.Net-PCL](https://www.nuget.org/packages/SQLite.Net.Core-PCL/)
 * [SQLite.Net-Core-PCL](https://www.nuget.org/packages/SQLite.Net.Core-PCL/)
 * [JetBrains.Annotations](https://www.nuget.org/packages/JetBrains.Annotations)
+* [PCLStorage](https://github.com/dsplaisted/PCLStorage)
 
 ## Credits
 
