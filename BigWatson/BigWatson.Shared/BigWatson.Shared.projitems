@@ -15,5 +15,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\ExceptionReport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\GroupedList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\VersionExtendedInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SQLiteReportsExtractor.cs" />
   </ItemGroup>
 </Project>

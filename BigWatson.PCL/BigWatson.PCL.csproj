@@ -38,11 +38,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BigWatson.cs" />
+    <Compile Include="Core\BigWatson.cs" />
     <Compile Include="BigWatsonAPIs.cs" />
-    <Compile Include="Helpers\FileSystemHelper.cs" />
-    <Compile Include="Helpers\ISettingsManager.cs" />
-    <Compile Include="LittleWatson.cs" />
+    <Compile Include="LocalStorage\FileSystemHelper.cs" />
+    <Compile Include="LocalStorage\ISettingsManager.cs" />
+    <Compile Include="Core\LittleWatson.cs" />
     <Compile Include="Misc\DatabaseInfo.cs" />
     <Compile Include="Misc\MemoryReporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

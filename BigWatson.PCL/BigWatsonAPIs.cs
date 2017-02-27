@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BigWatson.PCL.Core;
 using BigWatson.PCL.Helpers;
 using BigWatson.PCL.Misc;
 using BigWatson.Shared.Misc;
@@ -112,7 +113,7 @@ namespace BigWatson.PCL
         [PublicAPI]
         public static Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
         {
-            return BigWatson.LoadGroupedExceptionsAsync();
+            return Core.BigWatson.LoadGroupedExceptionsAsync();
         }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace BigWatson.PCL
         [PublicAPI]
         public static Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
-            return BigWatson.LoadAppVersionsInfoAsync(exceptionType);
+            return Core.BigWatson.LoadAppVersionsInfoAsync(exceptionType);
         }
 
         /// <summary>
@@ -140,7 +141,7 @@ namespace BigWatson.PCL
         [PublicAPI]
         public static Task<AsyncOperationResult<IReadOnlyList<ExceptionReport>>> TryTrimAndOptimizeDatabaseAsync(int length, CancellationToken token)
         {
-            return BigWatson.TryTrimAndOptimizeDatabaseAsync(length, token);
+            return Core.BigWatson.TryTrimAndOptimizeDatabaseAsync(length, token);
         }
 
         #endregion

@@ -4,7 +4,7 @@ using BigWatson.PCL.Helpers;
 using BigWatson.Shared.Models;
 using JetBrains.Annotations;
 
-namespace BigWatson.PCL
+namespace BigWatson.PCL.Core
 {
     /// <summary>
     /// A static class that contains methods to log and save new exception reports
