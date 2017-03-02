@@ -24,8 +24,8 @@ namespace BigWatson.Shared
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
-        public static async Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync(
-            [NotNull] AsyncTableQuery<ExceptionReport> table)
+        [ItemNotNull]
+        public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync([NotNull] AsyncTableQuery<ExceptionReport> table)
         {
             // Get all the app versions and the exceptions
             List<ExceptionReport> exceptions = await table.ToListAsync();
@@ -72,16 +72,16 @@ namespace BigWatson.Shared
             IEnumerable<GroupedList<VersionExtendedInfo, ExceptionReport>> groupedList =
                 from version in appVersions
                 let items =
-                    from exception in exceptions
+                    (from exception in exceptions
                     where exception.AppVersion.Equals(version)
                     orderby exception.CrashTime descending
-                    select exception
-                where items.Any()
+                    select exception).ToArray()
+                where items.Length > 0
                 select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                    new VersionExtendedInfo(items.Count(), version), items);
+                    new VersionExtendedInfo(items.Length, version), items);
 
             // Return the exceptions
-            return groupedList;
+            return new ExceptionsCollection(groupedList);
         }
 
         /// <summary>
@@ -95,6 +95,7 @@ namespace BigWatson.Shared
         /// for each previous app version</returns>
         [Pure]
         [PublicAPI]
+        [ItemNotNull]
         public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync(
             [NotNull] AsyncTableQuery<ExceptionReport> table, [NotNull] String exceptionType)
         {

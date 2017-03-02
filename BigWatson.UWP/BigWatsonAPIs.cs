@@ -98,7 +98,7 @@ namespace BigWatson.UWP
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
-        public static async Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
+        public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();

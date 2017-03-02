@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BigWatson.PCL.Core;
@@ -111,7 +110,7 @@ namespace BigWatson.PCL
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
-        public static Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
+        public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             return Core.BigWatson.LoadGroupedExceptionsAsync();
         }

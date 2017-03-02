@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BigWatson.PCL.Helpers;
@@ -130,7 +129,7 @@ namespace BigWatson.PCL.Core
         // Loads the groups with the previous exceptions that were thrown by the app
         [Pure]
         [PublicAPI]
-        public static async Task<IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>> LoadGroupedExceptionsAsync()
+        public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
             await EnsureDatabaseConnectionAsync();
