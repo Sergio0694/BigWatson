@@ -34,10 +34,12 @@ namespace BigWatson.Shared.Models
         /// </summary>
         public IEnumerator<IGrouping<VersionExtendedInfo, ExceptionReport>> GetEnumerator() => Source.GetEnumerator();
 
+        private int? _ExceptionsCount;
+
         /// <summary>
         /// Gets the total number of exceptions stored in this instance
         /// </summary>
-        public int ExceptionsCount => Source.Sum(g => g.Key.Occurrences);
+        public int ExceptionsCount => _ExceptionsCount ?? (_ExceptionsCount = Source.Sum(g => g.Key.Occurrences)).Value;
 
         /// <summary>
         /// Gets a list of all the available exception reports stored in this instance
