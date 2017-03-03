@@ -51,6 +51,10 @@ namespace BigWatson.Shared.Models
         /// </summary>
         public IEnumerable<Version> CrashedAppVersions => Source.Select(g => g.Key.AppVersion);
 
+        /// <summary>
+        /// Gets an ordered list of all the types of the exceptions that have been logged so far
+        /// </summary>
+        public IEnumerable<String> ExceptionTypes => Exceptions.Select(e => e.ExceptionType).Distinct().OrderBy(t => t);
 
         #endregion
     }
