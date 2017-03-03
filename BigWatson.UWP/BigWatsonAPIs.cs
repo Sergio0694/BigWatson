@@ -98,6 +98,7 @@ namespace BigWatson.UWP
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
+        [ItemNotNull]
         public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             // Make sure the database is connected
@@ -117,6 +118,7 @@ namespace BigWatson.UWP
         /// for each previous app version</returns>
         [Pure]
         [PublicAPI]
+        [ItemNotNull]
         public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
             // Make sure the database is connected

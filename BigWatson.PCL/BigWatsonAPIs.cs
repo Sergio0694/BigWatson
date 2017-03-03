@@ -110,6 +110,7 @@ namespace BigWatson.PCL
         /// reports for each version</returns>
         [Pure]
         [PublicAPI]
+        [ItemNotNull]
         public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             return Core.BigWatson.LoadGroupedExceptionsAsync();
@@ -125,6 +126,7 @@ namespace BigWatson.PCL
         /// for each previous app version</returns>
         [Pure]
         [PublicAPI]
+        [ItemNotNull]
         public static Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync([NotNull] String exceptionType)
         {
             return Core.BigWatson.LoadAppVersionsInfoAsync(exceptionType);
