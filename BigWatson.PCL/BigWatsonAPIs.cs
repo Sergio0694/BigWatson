@@ -13,7 +13,7 @@ using SQLite.Net.Interop;
 namespace BigWatson.PCL
 {
     /// <summary>
-    /// A wrapper class with all the public TysAPIs exposed by the library
+    /// A wrapper class with all the public methods exposed by the library
     /// </summary>
     public static class BigWatsonAPIs
     {
