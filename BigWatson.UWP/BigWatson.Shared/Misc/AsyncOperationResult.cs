@@ -39,19 +39,31 @@ namespace BigWatson.Shared.Misc
         /// <param name="other">The other value to compare</param>
         public bool Equals([CanBeNull] T other) => Result == null && other == null || Result?.Equals(other) == true;
 
-        // Implicit cast for the inner result
+        /// <summary>
+        /// Automatically extracts the inner result from an <see cref="AsyncOperationResult{T}"/> instance
+        /// </summary>
+        /// <param name="wrappedResult">The wrapped result</param>
         public static implicit operator T(AsyncOperationResult<T> wrappedResult) => wrappedResult.Result;
 
-        // Implicit cast to check if the operation completed successfully
+        /// <summary>
+        /// Implicit cast to check if the operation completed successfully (so the status property is set to <see cref="AsyncOperationStatus.RunToCompletion"/>
+        /// </summary>
+        /// <param name="wrappedResult">The wrapped result</param>
         public static implicit operator bool(AsyncOperationResult<T> wrappedResult) => wrappedResult.Status == AsyncOperationStatus.RunToCompletion;
 
-        // Implicit converter for successful results
+        /// <summary>
+        /// Implicit converter for successful results
+        /// </summary>
+        /// <param name="result">The result to wrap</param>
         public static implicit operator AsyncOperationResult<T>([CanBeNull] T result)
         {
             return new AsyncOperationResult<T>(result, AsyncOperationStatus.RunToCompletion);
         }
 
-        // Implicit converters for faulted results
+        /// <summary>
+        /// Implicit converter for faulted results
+        /// </summary>
+        /// <param name="status">The result status</param>
         public static implicit operator AsyncOperationResult<T>(AsyncOperationStatus status)
         {
             if (status == AsyncOperationStatus.RunToCompletion) throw new InvalidCastException("This implicit operator is not valid in this case");
