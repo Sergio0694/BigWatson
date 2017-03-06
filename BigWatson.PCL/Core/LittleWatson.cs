@@ -37,7 +37,7 @@ namespace BigWatson.PCL.Core
         /// <summary>
         /// Tries to flush to disk and get the last stored exception, if present
         /// </summary>
-        public static Task<ExceptionReport> TryFlushPreviousExceptionAsync()
+        public static async Task<ExceptionReport> TryFlushPreviousExceptionAsync()
         {
             // Check if there's a pending exception
             if (!AppSettings.ContainsKey(nameof(ExceptionReport.ExceptionType))) return null;
@@ -53,7 +53,7 @@ namespace BigWatson.PCL.Core
             }
 
             // Parse and return the new instance
-            return BigWatson.LogExceptionAsync(
+            ExceptionReport report = await BigWatson.LogExceptionAsync(
                 type,
                 AppSettings.GetValueOrDefault<int>(nameof(ExceptionReport.HResult)),
                 AppSettings.GetValueOrDefault<String>(nameof(ExceptionReport.Message)),
@@ -62,6 +62,8 @@ namespace BigWatson.PCL.Core
                 new Version(AppSettings.GetValueOrDefault<String>(nameof(ExceptionReport.AppVersion))),
                 DateTime.FromBinary(AppSettings.GetValueOrDefault<long>(nameof(ExceptionReport.CrashTime))),
                 AppSettings.GetValueOrDefault<long>(nameof(ExceptionReport.UsedMemory)));
+            AppSettings.Clear();
+            return report;
         }
     }
 }
