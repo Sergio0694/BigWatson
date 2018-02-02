@@ -117,14 +117,28 @@ namespace BigWatson
         #region Reports inspection
 
         /// <summary>
-        /// Loads the groups with the previous exceptions that were thrown by the app
+        /// Loads the groups with the previous exceptions from the built-in <see cref="Realm"/> instance
         /// </summary>
         [PublicAPI]
         [Pure, ItemNotNull]
-        public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
+        public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync() => LoadGroupedExceptionsAsync(DefaultConfiguration);
+
+        /// <summary>
+        /// Loads the groups with the previous exceptions from the <see cref="Realm"/> daatabase located at the specified path
+        /// </summary>
+        /// <param name="path">The path to the <see cref="Realm"/> database to read</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync([NotNull] String path) => LoadGroupedExceptionsAsync(new RealmConfiguration(path));
+
+        /// <summary>
+        /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance specified by the input <see cref="RealmConfiguration"/>
+        /// </summary>
+        [Pure, ItemNotNull]
+        private static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync([NotNull] RealmConfiguration configuration)
         {
             // Get all the app versions and the exceptions
-            using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
+            using (Realm realm = await Realm.GetInstanceAsync(configuration))
             {
                 ExceptionReport[] exceptions = realm.All<ExceptionReport>().ToArray();
 
