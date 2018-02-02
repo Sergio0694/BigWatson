@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="Realm.Database" Version="2.1.0" />
+    <PackageReference Include="Realm.KeyValueStorage" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

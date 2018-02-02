@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatson.Shared.Models
+namespace BigWatson.Models
 {
     /// <summary>
     /// A class that wraps a grouped collection of saved exception reports
     /// </summary>
     public sealed class ExceptionsCollection : IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>
     {
-        #region Misc
+        #region Initialization
 
         // Actual source query
         private readonly IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> Source;
