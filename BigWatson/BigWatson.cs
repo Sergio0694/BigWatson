@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -16,6 +17,24 @@ namespace BigWatson
     /// </summary>
     public static class BigWatson
     {
+        /// <summary>
+        /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
+        /// </summary>
+        [NotNull]
+        private static RealmConfiguration DefaultConfiguration
+        {
+            get
+            {
+                String
+                    code = Assembly.GetExecutingAssembly().Location,
+                    dll = Path.GetFullPath(code),
+                    root = Path.GetDirectoryName(dll),
+                    folder = Path.Combine(root, nameof(BigWatson)),
+                    path = Path.Combine(folder, "crashreports.realm");
+                return new RealmConfiguration(path);
+            }
+        }
+
         #region Logging
 
         /// <summary>
@@ -63,7 +82,7 @@ namespace BigWatson
                             time = keyRealm.Get<long>(nameof(ExceptionReport.CrashTime));
 
                         // Save the report into the database
-                        using (Realm realm = Realm.GetInstance(RealmConfiguration.DefaultConfiguration))
+                        using (Realm realm = Realm.GetInstance(DefaultConfiguration))
                         using (Transaction transaction = realm.BeginWrite())
                         {
                             ExceptionReport report = ExceptionReport.New(type, hResult, message, source, stackTrace, Version.Parse(version), DateTime.FromBinary(time), memory);
@@ -85,7 +104,7 @@ namespace BigWatson
         [PublicAPI]
         public static async Task ClearDatabaseAsync()
         {
-            using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+            using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             using (Transaction transaction = realm.BeginWrite())
             {
                 realm.RemoveAll<ExceptionReport>();
@@ -105,7 +124,7 @@ namespace BigWatson
         public static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync()
         {
             // Get all the app versions and the exceptions
-            using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+            using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
                 ExceptionReport[] exceptions = realm.All<ExceptionReport>().ToArray();
 
@@ -172,7 +191,7 @@ namespace BigWatson
         [Pure, ItemNotNull]
         public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync<T>() where T : Exception
         {
-            using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+            using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
                 // Get the exceptions with the same Type
                 String type = typeof(T).ToString();
@@ -200,7 +219,7 @@ namespace BigWatson
         [PublicAPI]
         public static async Task TrimDatabaseAsync(TimeSpan threshold)
         {
-            using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+            using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
                 IQueryable<ExceptionReport> old = realm.All<ExceptionReport>().Where(entry => DateTime.Now.Subtract(entry.CrashTime) > threshold);
                 realm.RemoveRange(old);
