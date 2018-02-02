@@ -1,4 +1,4 @@
-# BigWatson
+![](http://i.cubeupload.com/XRD8pX.png)
 
 A .NET Standard 2.0 library to easily log and review offline exception reports for an app.
 
