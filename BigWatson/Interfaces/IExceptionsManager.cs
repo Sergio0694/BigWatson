@@ -19,16 +19,16 @@ namespace BigWatsonDotNet.Interfaces
         void Log([NotNull] Exception e);
 
         /// <summary>
-        /// Deletes all the existing exception reports present in the database
-        /// </summary>
-        [PublicAPI]
-        Task ResetAsync();
-
-        /// <summary>
         /// Removes all the <see cref="ExceptionReport"/> instances in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
         [PublicAPI]
         Task TrimAsync(TimeSpan threshold);
+
+        /// <summary>
+        /// Deletes all the existing exception reports present in the database
+        /// </summary>
+        [PublicAPI]
+        Task ResetAsync();
 
         /// <summary>
         /// Copies the content of the current crash reports database into a <see cref="Stream"/>
@@ -43,5 +43,20 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target backup file</param>
         [PublicAPI]
         Task ExportDatabaseAsync([NotNull] String path);
+
+        /// <summary>
+        /// Exports the content of the current database as a JSON string
+        /// </summary>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportDatabaseAsJsonAsync();
+
+        /// <summary>
+        /// Exports the content of the current crash reports database into a JSON file with the specified path
+        /// </summary>
+        /// <param name="path">The path to the target export file</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportDatabaseAsJsonAsync([NotNull] String path);
     }
 }

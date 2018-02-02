@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Realms;
 
 namespace BigWatsonDotNet.Managers
@@ -17,6 +20,8 @@ namespace BigWatsonDotNet.Managers
     internal sealed class ReadWriteExceptionsManager : ReadOnlyExceptionsManager, IExceptionsManager
     {
         public ReadWriteExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
+
+        #region Write APIs
 
         /// <inheritdoc/>
         public void Log(Exception e)
@@ -34,7 +39,7 @@ namespace BigWatsonDotNet.Managers
                     StackTrace = e.StackTrace,
                     AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                     UsedMemory = BigWatson.UsedMemoryParser(),
-                    CrashTime = DateTime.Now.ToBinary()
+                    CrashTime = DateTimeOffset.Now
                 };
                 realm.Add(report);
                 transaction.Commit();
@@ -59,7 +64,7 @@ namespace BigWatsonDotNet.Managers
             {
                 foreach (RealmExceptionReport old in
                     from entry in realm.All<RealmExceptionReport>().ToArray()
-                    where DateTime.Now.Subtract(DateTime.FromBinary(entry.CrashTime)) > threshold
+                    where DateTime.Now.Subtract(entry.CrashTime.DateTime) > threshold
                     select entry)
                 {
                     realm.Remove(old);
@@ -68,6 +73,10 @@ namespace BigWatsonDotNet.Managers
 
             Realm.Compact();
         }
+
+        #endregion
+
+        #region File export
 
         /// <inheritdoc/>
         public Task<Stream> ExportDatabaseAsync()
@@ -112,5 +121,46 @@ namespace BigWatsonDotNet.Managers
                 }
             });
         }
+
+        #endregion
+
+        #region JSON export
+
+        /// <inheritdoc/>
+        public async Task<String> ExportDatabaseAsJsonAsync()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
+            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            {
+                // Serialize to JSON
+                RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
+                IList<JObject> list =
+                    (from exception in exceptions
+                     orderby exception.CrashTime descending
+                     select JObject.FromObject(exception)).ToList();
+                JObject jObj = new JObject
+                {
+                    ["Count"] = exceptions.Length,
+                    ["Exceptions"] = new JArray(list)
+                };
+                await jObj.WriteToAsync(jsonWriter);
+                await jsonWriter.FlushAsync();
+
+                // Return the JSON
+                byte[] bytes = stream.ToArray();
+                return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportDatabaseAsJsonAsync(String path)
+        {
+            String json = await ExportDatabaseAsJsonAsync();
+            File.WriteAllText(path, json);
+        }
+
+        #endregion
     }
 }

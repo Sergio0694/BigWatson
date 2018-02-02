@@ -74,7 +74,7 @@ namespace BigWatsonDotNet.Models
             Source = report.Source ?? String.Empty;
             StackTrace = report.StackTrace ?? String.Empty;
             AppVersion = Version.Parse(report.AppVersion);
-            CrashTime = DateTime.FromBinary(report.CrashTime);
+            CrashTime = report.CrashTime.LocalDateTime;
             UsedMemory = report.UsedMemory;
         }
 
@@ -126,7 +126,7 @@ namespace BigWatsonDotNet.Models
         /// Gets the first time this Exception type was generated
         /// </summary>
         [Ignored]
-        public DateTime LessRecentCrashTime { get; internal set; }
+        public DateTime LeastRecentCrashTime { get; internal set; }
 
         #endregion
     }

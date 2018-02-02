@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
@@ -20,6 +21,8 @@ namespace BigWatsonDotNet.Managers
         protected RealmConfiguration Configuration { get; }
 
         public ReadOnlyExceptionsManager([NotNull] RealmConfiguration configuration) => Configuration = configuration;
+
+        #region Reports loading
 
         /// <inheritdoc/>
         public async Task<ExceptionsCollection> LoadCrashReportsAsync()
@@ -44,7 +47,7 @@ namespace BigWatsonDotNet.Managers
 
                     // Update the crash times for the same Exceptions
                     exception.RecentCrashTime = sameType[0].CrashTime;
-                    if (sameType.Length > 1) exception.LessRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
+                    exception.LeastRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
 
                     // Get the app versions for this exception type
                     Version[] versions =
@@ -56,7 +59,7 @@ namespace BigWatsonDotNet.Managers
 
                     // Update the number of occurrencies and the app version interval
                     exception.MinExceptionVersion = versions[0];
-                    if (versions.Length > 1) exception.MaxExceptionVersion = versions[versions.Length - 1];
+                    exception.MaxExceptionVersion = versions[versions.Length - 1];
                 }
 
                 // Create the output collection
@@ -85,6 +88,22 @@ namespace BigWatsonDotNet.Managers
                     (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)).ToArray()
                      select new ExceptionReport(entry)).ToArray();
 
+                // Update the info
+                DateTime
+                    oldest = exceptions.OrderBy(entry => entry.CrashTime).First().CrashTime,
+                    newest = exceptions.OrderBy(entry => entry.CrashTime).Last().CrashTime;
+                Version
+                    min = exceptions.OrderBy(entry => entry.AppVersion).First().AppVersion,
+                    max = exceptions.OrderBy(entry => entry.AppVersion).Last().AppVersion;
+                foreach (ExceptionReport exception in exceptions)
+                {
+                    exception.ExceptionTypeOccurrencies = exceptions.Length;
+                    exception.RecentCrashTime = newest;
+                    exception.LeastRecentCrashTime = oldest;
+                    exception.MinExceptionVersion = min;
+                    exception.MaxExceptionVersion = max;
+                }
+
                 // Group by version
                 return new ExceptionsCollection(
                     from grouped in 
@@ -99,5 +118,35 @@ namespace BigWatsonDotNet.Managers
                         new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
             }
         }
+
+        #endregion
+
+        #region IEquatable
+
+        /// <inheritdoc/>
+        public bool Equals(IReadOnlyExceptionManager other)
+        {
+            if (other == null) return false;
+            if (ReferenceEquals(other, this)) return true;
+            return other.GetType() == GetType() &&
+                   other is ReadOnlyExceptionsManager manager &&
+                   manager.Configuration.DatabasePath.Equals(Configuration.DatabasePath);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => Equals(obj as IReadOnlyExceptionManager);
+
+        /// <inheritdoc/>
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // DatabasePath is not readonly, but can't be changed after initialization (so it's fine here)
+                return (17 + GetType().GetHashCode()) * 31 + Configuration.DatabasePath.GetHashCode();
+            }
+        }
+
+        #endregion
     }
 }

@@ -1,4 +1,5 @@
 ![](http://i.cubeupload.com/XRD8pX.png)
+[![NuGet](https://img.shields.io/nuget/v/BigWatson.svg)](https://www.nuget.org/packages/BigWatson/) [![NuGet](https://img.shields.io/nuget/dt/BigWatson.svg)](https://www.nuget.org/stats/packages/BigWatson?groupby=Version) [![AppVeyor](https://img.shields.io/appveyor/ci/Sergio0694/bigwatson.svg)](https://ci.appveyor.com/project/Sergio0694/bigwatson) [![AppVeyor tests](https://img.shields.io/appveyor/tests/Sergio0694/bigwatson.svg)](https://ci.appveyor.com/project/Sergio0694/bigwatson) [![Twitter Follow](https://img.shields.io/twitter/follow/Sergio0694.svg?style=flat&label=Follow)](https://twitter.com/SergioPedri)
 
 A .NET Standard 2.0 library to easily log and review offline exception reports for an app.
 
