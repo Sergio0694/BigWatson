@@ -126,7 +126,7 @@ namespace BigWatsonDotNet.Models
         /// Gets the first time this Exception type was generated
         /// </summary>
         [Ignored]
-        public DateTime LessRecentCrashTime { get; internal set; }
+        public DateTime LeastRecentCrashTime { get; internal set; }
 
         #endregion
     }

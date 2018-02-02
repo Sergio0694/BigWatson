@@ -44,7 +44,7 @@ namespace BigWatsonDotNet.Managers
 
                     // Update the crash times for the same Exceptions
                     exception.RecentCrashTime = sameType[0].CrashTime;
-                    if (sameType.Length > 1) exception.LessRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
+                    exception.LeastRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
 
                     // Get the app versions for this exception type
                     Version[] versions =
@@ -56,7 +56,7 @@ namespace BigWatsonDotNet.Managers
 
                     // Update the number of occurrencies and the app version interval
                     exception.MinExceptionVersion = versions[0];
-                    if (versions.Length > 1) exception.MaxExceptionVersion = versions[versions.Length - 1];
+                    exception.MaxExceptionVersion = versions[versions.Length - 1];
                 }
 
                 // Create the output collection
@@ -84,6 +84,22 @@ namespace BigWatsonDotNet.Managers
                 ExceptionReport[] exceptions = 
                     (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)).ToArray()
                      select new ExceptionReport(entry)).ToArray();
+
+                // Update the info
+                DateTime
+                    oldest = exceptions.OrderBy(entry => entry.CrashTime).First().CrashTime,
+                    newest = exceptions.OrderBy(entry => entry.CrashTime).Last().CrashTime;
+                Version
+                    min = exceptions.OrderBy(entry => entry.AppVersion).First().AppVersion,
+                    max = exceptions.OrderBy(entry => entry.AppVersion).Last().AppVersion;
+                foreach (ExceptionReport exception in exceptions)
+                {
+                    exception.ExceptionTypeOccurrencies = exceptions.Length;
+                    exception.RecentCrashTime = newest;
+                    exception.LeastRecentCrashTime = oldest;
+                    exception.MinExceptionVersion = min;
+                    exception.MaxExceptionVersion = max;
+                }
 
                 // Group by version
                 return new ExceptionsCollection(
