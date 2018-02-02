@@ -66,7 +66,6 @@ namespace BigWatsonDotNet.Managers
                         orderby exception.CrashTime descending
                         group exception by exception.AppVersion
                         into header
-                        orderby header.Key descending
                         select header
                     let crashes = grouped.ToArray()
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
@@ -87,16 +86,15 @@ namespace BigWatsonDotNet.Managers
 
                 // Group by version
                 return new ExceptionsCollection(
-                    from exception in exceptions
-                    group exception by exception.AppVersion
-                    into version
-                    orderby version.Key descending
-                    let items =
-                        (from entry in version
-                         orderby entry.CrashTime descending
-                         select entry).ToArray()
+                    from grouped in 
+                        from exception in exceptions
+                        orderby exception.CrashTime descending
+                        group exception by exception.AppVersion
+                        into header
+                        select header
+                    let crashes = grouped.ToArray()
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                        new VersionExtendedInfo(items.Length, version.Key), items));
+                        new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
             }
         }
     }
