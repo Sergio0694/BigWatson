@@ -6,71 +6,77 @@ using Realms;
 namespace BigWatson.Models
 {
     /// <summary>
-    /// A class that maps the database table used to store app crashes
+    /// A class that represents a standalone crash report
     /// </summary>
-    public sealed class ExceptionReport : RealmObject
+    public sealed class ExceptionReport
     {
+        #region Properties
+
         /// <summary>
         /// Gets the key of the current Exception
         /// </summary>
-        [PrimaryKey]
-        public String Uid { get; internal set; }
+        [NotNull, PrimaryKey]
+        public String Uid { get; }
 
         /// <summary>
-        /// Gets a String representing the Type of the Exception
+        /// Gets the type of the exception for this crash report
         /// </summary>
-        public String ExceptionType { get; internal set; }
+        [NotNull]
+        public String ExceptionType { get; }
 
         /// <summary>
-        /// Gets the HResult associated to the Exception
+        /// Gets the HResult associated to the exception
         /// </summary>
-        public int HResult { get; internal set; }
+        public int HResult { get; }
 
         /// <summary>
         /// Gets the message that was generated when the Exception was thrown
         /// </summary>
-        public String Message { get; internal set; }
+        [NotNull]
+        public String Message { get; }
 
         /// <summary>
         /// Gets the source of the Exception, if present
         /// </summary>
-        public String Source { get; internal set; }
+        [NotNull]
+        public String Source { get; }
 
         /// <summary>
         /// Gets the StackTrace for the current Exception
         /// </summary>
-        public String StackTrace { get; internal set; }
-
-        // Internal app version
-        internal String InternalAppVersion { get; set; }
+        [NotNull]
+        public String StackTrace { get; }
 
         /// <summary>
-        /// Gets the version of the app when the Exception was thrown
+        /// Gets the version of the app when the exception was thrown
         /// </summary>
         [NotNull]
-        public Version AppVersion
-        {
-            get => Version.Parse(InternalAppVersion);
-            internal set => InternalAppVersion = value.ToString();
-        }
-
-        // Internal binary crash time
-        internal long InternalCrashTime { get; set; }
+        public Version AppVersion { get; }
 
         /// <summary>
         /// Gets the time of the crash
         /// </summary>
-        [Ignored]
-        public DateTime CrashTime
-        {
-            get => DateTime.FromBinary(InternalCrashTime);
-            internal set => InternalCrashTime = value.ToBinary();
-        }
+        public DateTime CrashTime { get; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
         /// </summary>
-        public long UsedMemory { get; internal set; }
+        public long UsedMemory { get; }
+
+        #endregion
+
+        internal ExceptionReport([NotNull] RealmExceptionReport report)
+        {
+            Uid = report.Uid;
+            ExceptionType = report.ExceptionType;
+            HResult = report.HResult;
+            Message = report.Message ?? String.Empty;
+            Source = report.Source ?? String.Empty;
+            StackTrace = report.StackTrace ?? String.Empty;
+            AppVersion = Version.Parse(report.AppVersion);
+            CrashTime = DateTime.FromBinary(report.CrashTime);
+            UsedMemory = report.UsedMemory;
+        }
 
         #region Additional parameters
 

@@ -14,7 +14,7 @@ namespace BigWatson
     /// <summary>
     /// The entry point with all the APIs exposed by the library
     /// </summary>
-    public static class BigWatson
+    public static class ExceptionsManager
     {
         #region Properties
 
@@ -28,7 +28,7 @@ namespace BigWatson
             {
                 String
                     data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    folder = Path.Combine(data, nameof(BigWatson)),
+                    folder = Path.Combine(data, nameof(ExceptionsManager)),
                     path = Path.Combine(folder, "crashreports.realm");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
                 return new RealmConfiguration(path);
@@ -73,22 +73,22 @@ namespace BigWatson
         /// </summary>
         /// <param name="e">Exception that caused the app to crash</param>
         [PublicAPI]
-        public static void LogException([NotNull] Exception e)
+        public static void Log([NotNull] Exception e)
         {
             // Save the report into the database
             using (Realm realm = Realm.GetInstance(DefaultConfiguration))
             using (Transaction transaction = realm.BeginWrite())
             {
-                ExceptionReport report = new ExceptionReport
+                RealmExceptionReport report = new RealmExceptionReport
                 {
                     Uid = Guid.NewGuid().ToString(),
                     ExceptionType = e.GetType().ToString(),
                     HResult = e.HResult,
                     Message = e.Message,
                     StackTrace = e.StackTrace,
-                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version,
+                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                     UsedMemory = UsedMemoryParser(),
-                    CrashTime = DateTime.Now
+                    CrashTime = DateTime.Now.ToBinary()
                 };
                 realm.Add(report);
                 transaction.Commit();
@@ -104,7 +104,7 @@ namespace BigWatson
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             using (Transaction transaction = realm.BeginWrite())
             {
-                realm.RemoveAll<ExceptionReport>();
+                realm.RemoveAll<RealmExceptionReport>();
                 transaction.Commit();
             }
         }
@@ -137,7 +137,9 @@ namespace BigWatson
             // Get all the app versions and the exceptions
             using (Realm realm = await Realm.GetInstanceAsync(configuration))
             {
-                ExceptionReport[] exceptions = realm.All<ExceptionReport>().ToArray();
+                ExceptionReport[] exceptions =
+                    (from entry in realm.All<RealmExceptionReport>().ToArray()
+                     select new ExceptionReport(entry)).ToArray();
 
                 // Update the type occurrencies and the other info
                 foreach (ExceptionReport exception in exceptions)
@@ -206,7 +208,9 @@ namespace BigWatson
             {
                 // Get the exceptions with the same Type
                 String type = typeof(T).ToString();
-                ExceptionReport[] exceptions = realm.All<ExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)).ToArray();
+                ExceptionReport[] exceptions = 
+                    (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type))
+                     select new ExceptionReport(entry)).ToArray();
 
                 // Group the exceptions with their app version
                 IEnumerable<Version> versions =
@@ -232,7 +236,7 @@ namespace BigWatson
         {
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
-                IQueryable<ExceptionReport> old = realm.All<ExceptionReport>().Where(entry => DateTime.Now.Subtract(entry.CrashTime) > threshold);
+                IQueryable<RealmExceptionReport> old = realm.All<RealmExceptionReport>().Where(entry => DateTime.Now.Subtract(DateTime.FromBinary(entry.CrashTime)) > threshold);
                 realm.RemoveRange(old);
             }
 
