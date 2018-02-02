@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
@@ -35,21 +34,19 @@ namespace BigWatsonDotNet.Managers
                 // Update the type occurrencies and the other info
                 foreach (ExceptionReport exception in exceptions)
                 {
-                    // Number of times this same Exception was thrown
-                    exception.ExceptionTypeOccurrencies = exceptions.Count(item => item.ExceptionType.Equals(exception.ExceptionType));
-
-                    // Exceptions with the same Type
+                    // Exceptions with the same type
                     ExceptionReport[] sameType =
                         (from item in exceptions
                          where item.ExceptionType.Equals(exception.ExceptionType)
                          orderby item.CrashTime descending
                          select item).ToArray();
+                    exception.ExceptionTypeOccurrencies = sameType.Length;
 
                     // Update the crash times for the same Exceptions
-                    exception.RecentCrashTime = sameType.First().CrashTime;
-                    if (sameType.Length > 1) exception.LessRecentCrashTime = sameType.Last().CrashTime;
+                    exception.RecentCrashTime = sameType[0].CrashTime;
+                    if (sameType.Length > 1) exception.LessRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
 
-                    // Get the app versions for this Exception Type
+                    // Get the app versions for this exception type
                     Version[] versions =
                         (from entry in sameType
                          group entry by entry.AppVersion
@@ -58,29 +55,22 @@ namespace BigWatsonDotNet.Managers
                          select version.Key).ToArray();
 
                     // Update the number of occurrencies and the app version interval
-                    exception.MinExceptionVersion = versions.First();
-                    if (versions.Length > 1) exception.MaxExceptionVersion = versions.Last();
+                    exception.MinExceptionVersion = versions[0];
+                    if (versions.Length > 1) exception.MaxExceptionVersion = versions[versions.Length - 1];
                 }
-
-                // List the available app versions
-                IEnumerable<Version> appVersions =
-                    from exception in exceptions
-                    group exception by exception.AppVersion
-                    into header
-                    orderby header.Key descending
-                    select header.Key;
 
                 // Create the output collection
                 return new ExceptionsCollection(
-                    from version in appVersions
-                    let items =
-                        (from exception in exceptions
-                         where exception.AppVersion.Equals(version)
-                         orderby exception.CrashTime descending
-                         select exception).ToArray()
-                    where items.Length > 0
+                    from grouped in 
+                        from exception in exceptions
+                        orderby exception.CrashTime descending
+                        group exception by exception.AppVersion
+                        into header
+                        orderby header.Key descending
+                        select header
+                    let crashes = grouped.ToArray()
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                        new VersionExtendedInfo(items.Length, version), items));
+                        new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
             }
         }
 
@@ -89,7 +79,7 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                // Get the exceptions with the same Type
+                // Get the exceptions with the same type
                 String type = typeof(T).ToString();
                 ExceptionReport[] exceptions = 
                     (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type))

@@ -14,24 +14,23 @@ namespace BigWatsonDotNet.Models
         #region Initialization
 
         // Actual source query
+        [NotNull, ItemNotNull]
         private readonly IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> Source;
 
         // Internal constructor
-        internal ExceptionsCollection([NotNull] IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> source)
+        internal ExceptionsCollection([NotNull, ItemNotNull] IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> source)
         {
             Source = source;
         }
 
-        // Base enumerator
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
         #endregion
 
-        #region Public methods and parameters
+        #region Public APIs
 
-        /// <summary>
-        /// Gets an enumerator that returns all the available groups of saved exception reports
-        /// </summary>
+        /// <inheritdoc/>
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <inheritdoc/>
         public IEnumerator<IGrouping<VersionExtendedInfo, ExceptionReport>> GetEnumerator() => Source.GetEnumerator();
 
         private int? _ExceptionsCount;
