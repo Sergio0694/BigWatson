@@ -99,7 +99,7 @@ namespace BigWatson
         /// Deletes all the existing exception reports present in the database
         /// </summary>
         [PublicAPI]
-        public static async Task ClearDatabaseAsync()
+        public static async Task ResetAsync()
         {
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             using (Transaction transaction = realm.BeginWrite())
@@ -118,7 +118,7 @@ namespace BigWatson
         /// </summary>
         [PublicAPI]
         [Pure, ItemNotNull]
-        public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync() => LoadGroupedExceptionsAsync(DefaultConfiguration);
+        public static Task<ExceptionsCollection> LoadCrashReportsAsync() => LoadCrashReportsAsync(DefaultConfiguration);
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> daatabase located at the specified path
@@ -126,13 +126,13 @@ namespace BigWatson
         /// <param name="path">The path to the <see cref="Realm"/> database to read</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        public static Task<ExceptionsCollection> LoadGroupedExceptionsAsync([NotNull] String path) => LoadGroupedExceptionsAsync(new RealmConfiguration(path));
+        public static Task<ExceptionsCollection> LoadCrashReportsAsync([NotNull] String path) => LoadCrashReportsAsync(new RealmConfiguration(path));
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance specified by the input <see cref="RealmConfiguration"/>
         /// </summary>
         [Pure, ItemNotNull]
-        private static async Task<ExceptionsCollection> LoadGroupedExceptionsAsync([NotNull] RealmConfiguration configuration)
+        private static async Task<ExceptionsCollection> LoadCrashReportsAsync([NotNull] RealmConfiguration configuration)
         {
             // Get all the app versions and the exceptions
             using (Realm realm = await Realm.GetInstanceAsync(configuration))
@@ -202,7 +202,7 @@ namespace BigWatson
         /// <typeparam name="T">The <see cref="Exception"/> type to look for</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        public static async Task<IEnumerable<VersionExtendedInfo>> LoadAppVersionsInfoAsync<T>() where T : Exception
+        public static async Task<IEnumerable<VersionExtendedInfo>> LoadExceptionInfoAsync<T>() where T : Exception
         {
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
@@ -232,7 +232,7 @@ namespace BigWatson
         /// Removes all the <see cref="ExceptionReport"/> instances in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
         [PublicAPI]
-        public static async Task TrimDatabaseAsync(TimeSpan threshold)
+        public static async Task TrimAsync(TimeSpan threshold)
         {
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {

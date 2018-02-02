@@ -21,19 +21,19 @@ And that's it! The library will now automatically log every exception thrown by 
 It is possible to load the complete list of previous exception reports, sorted by app versions, using:
 
 ```C#
-ExceptionsCollection reports = await ExceptionsManager.LoadGroupedExceptionsAsync();
+ExceptionsCollection reports = await ExceptionsManager.LoadCrashReportsAsync();
 ```
 
 To load additional versions info for a specific exception type, use this method:
 
 ```C#
-IEnumerable<VersionExtendedInfo>> info = await ExceptionsManager.LoadAppVersionsInfoAsync<InvalidOperationException>();
+IEnumerable<VersionExtendedInfo>> info = await ExceptionsManager.LoadExceptionInfoAsync<InvalidOperationException>();
 ```
 
 It is also possible to trim the local exceptions database by deleting old reports that are no longer needed:
 
 ```C#
-await ExceptionsManager.TrimDatabaseAsync(TimeSpan.FromDays(30));
+await ExceptionsManager.TrimAsync(TimeSpan.FromDays(30));
 ```
 
 ## Dependencies
