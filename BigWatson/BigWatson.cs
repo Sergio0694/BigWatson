@@ -41,42 +41,55 @@ namespace BigWatson
         /// <summary>
         /// Checks for a previous temporary exception report and flushes it into the internal database if possible
         /// </summary>
-        /// <returns><see langword="true"/> if a previous crash report was found and flushed, <see langword="false"/> if no crash reports were found</returns>
         [PublicAPI]
-        public static async Task<bool> TryFlushPreviousExceptionAsync()
+        public static void TryFlushPreviousException()
         {
-            try
+            Task.Run(() =>
             {
-                using (KeyValueRealm keyRealm = KeyValueRealm.GetInstance())
+                try
                 {
-                    // Extract the previous report data
-                    String
-                        type = keyRealm.Get<String>(nameof(ExceptionReport.ExceptionType)),
-                        message = keyRealm.Get<String>(nameof(ExceptionReport.Message)),
-                        source = keyRealm.Get<String>(nameof(ExceptionReport.Source)),
-                        stackTrace = keyRealm.Get<String>(nameof(ExceptionReport.StackTrace)),
-                        version = keyRealm.Get<String>(nameof(ExceptionReport.AppVersion));
-                    int hResult = keyRealm.Get<int>(nameof(ExceptionReport.HResult));
-                    long
-                        memory = keyRealm.Get<long>(nameof(ExceptionReport.UsedMemory)),
-                        time = keyRealm.Get<long>(nameof(ExceptionReport.CrashTime));
-
-                    // Save the report into the database
-                    using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+                    using (KeyValueRealm keyRealm = KeyValueRealm.GetInstance())
                     {
-                        await realm.WriteAsync(r =>
+                        // Extract the previous report data
+                        String
+                            type = keyRealm.Get<String>(nameof(ExceptionReport.ExceptionType)),
+                            message = keyRealm.Get<String>(nameof(ExceptionReport.Message)),
+                            source = keyRealm.Get<String>(nameof(ExceptionReport.Source)),
+                            stackTrace = keyRealm.Get<String>(nameof(ExceptionReport.StackTrace)),
+                            version = keyRealm.Get<String>(nameof(ExceptionReport.AppVersion));
+                        int hResult = keyRealm.Get<int>(nameof(ExceptionReport.HResult));
+                        long
+                            memory = keyRealm.Get<long>(nameof(ExceptionReport.UsedMemory)),
+                            time = keyRealm.Get<long>(nameof(ExceptionReport.CrashTime));
+
+                        // Save the report into the database
+                        using (Realm realm = Realm.GetInstance(RealmConfiguration.DefaultConfiguration))
+                        using (Transaction transaction = realm.BeginWrite())
                         {
                             ExceptionReport report = ExceptionReport.New(type, hResult, message, source, stackTrace, Version.Parse(version), DateTime.FromBinary(time), memory);
-                            r.Add(report);
-                        });
+                            realm.Add(report);
+                            transaction.Commit();
+                        }
                     }
                 }
-                return true;
-            }
-            catch
+                catch
+                {
+                    // Previous report not found
+                }
+            });
+        }
+
+        /// <summary>
+        /// Deletes all the existing exception reports present in the database
+        /// </summary>
+        [PublicAPI]
+        public static async Task ClearDatabaseAsync()
+        {
+            using (Realm realm = await Realm.GetInstanceAsync(RealmConfiguration.DefaultConfiguration))
+            using (Transaction transaction = realm.BeginWrite())
             {
-                // Previous report not found
-                return false;
+                realm.RemoveAll<ExceptionReport>();
+                transaction.Commit();
             }
         }
 
