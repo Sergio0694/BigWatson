@@ -39,7 +39,7 @@ namespace BigWatson.Models
         /// <summary>
         /// Gets the total number of exceptions stored in this instance
         /// </summary>
-        public int ExceptionsCount => _ExceptionsCount ?? (_ExceptionsCount = Source.Sum(g => g.Key.Occurrences)).Value;
+        public int ExceptionsCount => _ExceptionsCount ?? (_ExceptionsCount = Source.Sum(g => g.Key.Crashes)).Value;
 
         /// <summary>
         /// Gets a list of all the available exception reports stored in this instance

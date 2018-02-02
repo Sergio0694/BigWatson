@@ -27,7 +27,7 @@ ExceptionsCollection reports = await ExceptionsManager.LoadCrashReportsAsync();
 To load additional versions info for a specific exception type, use this method:
 
 ```C#
-IEnumerable<VersionExtendedInfo>> info = await ExceptionsManager.LoadExceptionInfoAsync<InvalidOperationException>();
+ExceptionsCollection reports = await ExceptionsManager.LoadCrashReportsAsync<InvalidOperationException>();
 ```
 
 It is also possible to trim the local exceptions database by deleting old reports that are no longer needed:

@@ -180,29 +180,27 @@ namespace BigWatson
                     select header.Key;
 
                 // Create the output collection
-                IEnumerable<GroupedList<VersionExtendedInfo, ExceptionReport>> groupedList =
+                return new ExceptionsCollection(
                     from version in appVersions
                     let items =
                         (from exception in exceptions
-                        where exception.AppVersion.Equals(version)
-                        orderby exception.CrashTime descending
-                        select exception).ToArray()
+                         where exception.AppVersion.Equals(version)
+                         orderby exception.CrashTime descending
+                         select exception).ToArray()
                     where items.Length > 0
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                        new VersionExtendedInfo(items.Length, version), items);
-
-                // Return the exceptions
-                return new ExceptionsCollection(groupedList);
+                        new VersionExtendedInfo(items.Length, version), items));
             }
         }
 
         /// <summary>
-        /// Returns the sequence of all the app versions that generated the specified <see cref="Exception"/> type
+        /// Loads the groups with the previous exceptions from the built-in <see cref="Realm"/> instance 
+        /// for the app versions that generated the specified <see cref="Exception"/> type
         /// </summary>
         /// <typeparam name="T">The <see cref="Exception"/> type to look for</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        public static async Task<IEnumerable<VersionExtendedInfo>> LoadExceptionInfoAsync<T>() where T : Exception
+        public static async Task<ExceptionsCollection> LoadCrashReportsAsync<T>() where T : Exception
         {
             using (Realm realm = await Realm.GetInstanceAsync(DefaultConfiguration))
             {
@@ -212,19 +210,18 @@ namespace BigWatson
                     (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type))
                      select new ExceptionReport(entry)).ToArray();
 
-                // Group the exceptions with their app version
-                IEnumerable<Version> versions =
+                // Group by version
+                return new ExceptionsCollection(
                     from exception in exceptions
                     group exception by exception.AppVersion
                     into version
-                    orderby version.Key
-                    select version.Key;
-
-                // Return the chart data
-                return
-                    from version in versions
-                    let count = exceptions.Count(item => item.AppVersion.Equals(version))
-                    select new VersionExtendedInfo(count, version);
+                    orderby version.Key descending
+                    let items =
+                        (from entry in version
+                         orderby entry.CrashTime descending
+                         select entry).ToArray()
+                    select new GroupedList<VersionExtendedInfo, ExceptionReport>(
+                        new VersionExtendedInfo(items.Length, version.Key), items));
             }
         }
 

@@ -9,9 +9,9 @@ namespace BigWatson.Models
     public sealed class VersionExtendedInfo
     {
         /// <summary>
-        /// Gets the value of this instance
+        /// Gets the number of total crashes for this app version
         /// </summary>
-        public int Occurrences { get; }
+        public int Crashes { get; }
 
         /// <summary>
         /// Gets the app version associated with the current value
@@ -20,9 +20,9 @@ namespace BigWatson.Models
         public Version AppVersion { get; }
 
         // Internal constructor
-        internal VersionExtendedInfo(int value, [NotNull] Version version)
+        internal VersionExtendedInfo(int crashes, [NotNull] Version version)
         {
-            Occurrences = value;
+            Crashes = crashes;
             AppVersion = version;
         }
     }
