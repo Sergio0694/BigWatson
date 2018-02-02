@@ -11,6 +11,8 @@
     <Description>A complete, easy to use .NET Standard 2.0 offline exception logging library</Description>
     <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test</PackageTags>
     <RootNamespace>BigWatsonDotNet</RootNamespace>
+    <PackageIconUrl>http://i.cubeupload.com/I7GClf.png</PackageIconUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

@@ -72,14 +72,14 @@ namespace BigWatsonDotNet
         }
 
         [CanBeNull]
-        private static IExceptionsManager _Default;
+        private static IExceptionsManager _Instance;
 
         /// <summary>
-        /// Gets the default <see cref="IExceptionsManager"/> instance to read and write crash reports for the current app
+        /// Gets the local <see cref="IExceptionsManager"/> instance to read and write crash reports for the current app
         /// </summary>
         [PublicAPI]
         [NotNull]
-        public static IExceptionsManager Default => _Default ?? (_Default = new ReadWriteExceptionsManager(DefaultConfiguration));
+        public static IExceptionsManager Instance => _Instance ?? (_Instance = new ReadWriteExceptionsManager(DefaultConfiguration));
 
         /// <summary>
         /// Gets an <see cref="IReadOnlyExceptionManager"/> instance to access crash reports from an external database
