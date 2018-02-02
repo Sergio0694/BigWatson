@@ -47,7 +47,12 @@ namespace BigWatson.Models
         /// <summary>
         /// Gets the version of the app when the Exception was thrown
         /// </summary>
-        public Version AppVersion => new Version(InternalAppVersion);
+        [NotNull]
+        public Version AppVersion
+        {
+            get => Version.Parse(InternalAppVersion);
+            internal set => InternalAppVersion = value.ToString();
+        }
 
         // Internal binary crash time
         internal long InternalCrashTime { get; set; }
@@ -59,41 +64,13 @@ namespace BigWatson.Models
         public DateTime CrashTime
         {
             get => DateTime.FromBinary(InternalCrashTime);
-            private set => InternalCrashTime = value.ToBinary();
+            internal set => InternalCrashTime = value.ToBinary();
         }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
         /// </summary>
         public long UsedMemory { get; internal set; }
-
-        /// <summary>
-        /// Creates a new instance of the ExceptionReport with the given parameters
-        /// </summary>
-        /// <param name="type">The Type of the Exception</param>
-        /// <param name="hResult">The Exception HResult</param>
-        /// <param name="message">The Exception message, if present</param>
-        /// <param name="source">The source of the Exception, if available</param>
-        /// <param name="stackTrace">The StackTrace of the Exception</param>
-        /// <param name="version">The app version when the crash happened</param>
-        /// <param name="crashTime">The crash time</param>
-        /// <param name="usedMemory">The amount of memory that the app was using when it crashed</param>
-        internal static ExceptionReport New([NotNull] String type, int hResult, [CanBeNull] String message, [CanBeNull] String source, 
-            [CanBeNull] String stackTrace, [NotNull] Version version, DateTime crashTime, long usedMemory)
-        {
-            return new ExceptionReport
-            {
-                Uid = Guid.NewGuid().ToString(),
-                ExceptionType = type,
-                HResult = hResult,
-                Source = source ?? String.Empty,
-                Message = message ?? String.Empty,
-                StackTrace = stackTrace ?? String.Empty,
-                CrashTime = crashTime,
-                InternalAppVersion = version.ToString(),
-                UsedMemory = usedMemory
-            };
-        }
 
         #region Additional parameters
 

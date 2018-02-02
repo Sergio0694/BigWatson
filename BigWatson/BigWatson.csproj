@@ -12,10 +12,19 @@
     <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\BigWatson.xml</DocumentationFile>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\BigWatson.xml</DocumentationFile>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Realm.Database" Version="2.1.0" />
-    <PackageReference Include="Realm.KeyValueStorage" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

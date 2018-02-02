@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using BigWatson.Models;
 using JetBrains.Annotations;
 using Realms;
-using Realms.KeyValueStorage;
 
 namespace BigWatson
 {
@@ -17,6 +16,8 @@ namespace BigWatson
     /// </summary>
     public static class BigWatson
     {
+        #region Properties
+
         /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
         /// </summary>
@@ -26,14 +27,44 @@ namespace BigWatson
             get
             {
                 String
-                    code = Assembly.GetExecutingAssembly().Location,
-                    dll = Path.GetFullPath(code),
-                    root = Path.GetDirectoryName(dll),
-                    folder = Path.Combine(root, nameof(BigWatson)),
+                    data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    folder = Path.Combine(data, nameof(BigWatson)),
                     path = Path.Combine(folder, "crashreports.realm");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
                 return new RealmConfiguration(path);
             }
         }
+
+        // The default memory parser
+        [Pure]
+        private static long DefaultMemoryParser()
+        {
+            try
+            {
+                return Process.GetCurrentProcess().PrivateMemorySize64;
+            }
+            catch (PlatformNotSupportedException)
+            {
+                // Just ignore
+                return 0;
+            }
+        }
+
+        [CanBeNull]
+        private static Func<long> _UsedMemoryParser;
+
+        /// <summary>
+        /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
+        /// This is needed on some platforms (eg. UWP), where the <see cref="Process"/> APIs are not supported.
+        /// </summary>
+        [NotNull]
+        public static Func<long> UsedMemoryParser
+        {
+            get => _UsedMemoryParser ?? DefaultMemoryParser;
+            set => _UsedMemoryParser = value;
+        }
+
+        #endregion
 
         #region Logging
 
@@ -44,58 +75,24 @@ namespace BigWatson
         [PublicAPI]
         public static void LogException([NotNull] Exception e)
         {
-            using (KeyValueRealm realm = KeyValueRealm.GetInstance())
+            // Save the report into the database
+            using (Realm realm = Realm.GetInstance(DefaultConfiguration))
+            using (Transaction transaction = realm.BeginWrite())
             {
-                realm.Set(nameof(ExceptionReport.ExceptionType), e.GetType().ToString());
-                realm.Set(nameof(ExceptionReport.Source), e.Source);
-                realm.Set(nameof(ExceptionReport.HResult), e.HResult);
-                realm.Set(nameof(ExceptionReport.Message), e.Message);
-                realm.Set(nameof(ExceptionReport.StackTrace), e.StackTrace);
-                realm.Set(nameof(ExceptionReport.AppVersion), Assembly.GetExecutingAssembly().GetName().Version);
-                realm.Set(nameof(ExceptionReport.UsedMemory), Process.GetCurrentProcess().VirtualMemorySize64);
-                realm.Set(nameof(ExceptionReport.CrashTime), DateTime.Now.ToBinary());
+                ExceptionReport report = new ExceptionReport
+                {
+                    Uid = Guid.NewGuid().ToString(),
+                    ExceptionType = e.GetType().ToString(),
+                    HResult = e.HResult,
+                    Message = e.Message,
+                    StackTrace = e.StackTrace,
+                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version,
+                    UsedMemory = UsedMemoryParser(),
+                    CrashTime = DateTime.Now
+                };
+                realm.Add(report);
+                transaction.Commit();
             }
-        }
-
-        /// <summary>
-        /// Checks for a previous temporary exception report and flushes it into the internal database if possible
-        /// </summary>
-        [PublicAPI]
-        public static void TryFlushPreviousException()
-        {
-            Task.Run(() =>
-            {
-                try
-                {
-                    using (KeyValueRealm keyRealm = KeyValueRealm.GetInstance())
-                    {
-                        // Extract the previous report data
-                        String
-                            type = keyRealm.Get<String>(nameof(ExceptionReport.ExceptionType)),
-                            message = keyRealm.Get<String>(nameof(ExceptionReport.Message)),
-                            source = keyRealm.Get<String>(nameof(ExceptionReport.Source)),
-                            stackTrace = keyRealm.Get<String>(nameof(ExceptionReport.StackTrace)),
-                            version = keyRealm.Get<String>(nameof(ExceptionReport.AppVersion));
-                        int hResult = keyRealm.Get<int>(nameof(ExceptionReport.HResult));
-                        long
-                            memory = keyRealm.Get<long>(nameof(ExceptionReport.UsedMemory)),
-                            time = keyRealm.Get<long>(nameof(ExceptionReport.CrashTime));
-
-                        // Save the report into the database
-                        using (Realm realm = Realm.GetInstance(DefaultConfiguration))
-                        using (Transaction transaction = realm.BeginWrite())
-                        {
-                            ExceptionReport report = ExceptionReport.New(type, hResult, message, source, stackTrace, Version.Parse(version), DateTime.FromBinary(time), memory);
-                            realm.Add(report);
-                            transaction.Commit();
-                        }
-                    }
-                }
-                catch
-                {
-                    // Previous report not found
-                }
-            });
         }
 
         /// <summary>
