@@ -2,8 +2,6 @@
 
 A .NET Standard 2.0 library to easily log and review offline exception reports for an app.
 
-<a href="https://www.nuget.org/packages/BigWatson"><img src="http://i.pi.gy/r8Wr.png" alt="Get it from NuGet" width='200' /></a>
-
 # Table of Contents
 
 - [Installing from NuGet](#installing-from-nuget)
