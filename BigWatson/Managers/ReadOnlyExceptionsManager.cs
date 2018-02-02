@@ -12,7 +12,7 @@ namespace BigWatsonDotNet.Managers
     /// <summary>
     /// A readonly exceptions manager to provider access to any kind of crash reports database
     /// </summary>
-    internal class ReadOnlyExceptionsManager : IReadOnlyExceptionManager
+    internal class ReadOnlyExceptionsManager : IReadOnlyExceptionsManager
     {
         /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
@@ -124,7 +124,7 @@ namespace BigWatsonDotNet.Managers
         #region IEquatable
 
         /// <inheritdoc/>
-        public bool Equals(IReadOnlyExceptionManager other)
+        public bool Equals(IReadOnlyExceptionsManager other)
         {
             if (other == null) return false;
             if (ReferenceEquals(other, this)) return true;
@@ -134,7 +134,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => Equals(obj as IReadOnlyExceptionManager);
+        public override bool Equals(object obj) => Equals(obj as IReadOnlyExceptionsManager);
 
         /// <inheritdoc/>
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]

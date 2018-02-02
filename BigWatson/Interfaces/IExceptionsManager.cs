@@ -9,7 +9,7 @@ namespace BigWatsonDotNet.Interfaces
     /// <summary>
     /// An interface for an exceptions manager instance with write permission
     /// </summary>
-    public interface IExceptionsManager : IReadOnlyExceptionManager
+    public interface IExceptionsManager : IReadOnlyExceptionsManager
     {
         /// <summary>
         /// Saves the crash report into local storage

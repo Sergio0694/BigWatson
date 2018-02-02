@@ -79,14 +79,14 @@ namespace BigWatsonDotNet
         /// </summary>
         [PublicAPI]
         [NotNull]
-        public static IExceptionsManager Instance => _Instance ?? (_Instance = new ReadWriteExceptionsManager(DefaultConfiguration));
+        public static IExceptionsManager Instance => _Instance ?? (_Instance = new ExceptionsManager(DefaultConfiguration));
 
         /// <summary>
-        /// Gets an <see cref="IReadOnlyExceptionManager"/> instance to access crash reports from an external database
+        /// Gets an <see cref="IReadOnlyExceptionsManager"/> instance to access crash reports from an external database
         /// </summary>
         /// <param name="path">The path to the exported crash reports database to open</param>
         [PublicAPI]
         [Pure, NotNull]
-        public static IReadOnlyExceptionManager Load([NotNull] String path) => new ReadOnlyExceptionsManager(new RealmConfiguration(path));
+        public static IReadOnlyExceptionsManager Load([NotNull] String path) => new ReadOnlyExceptionsManager(new RealmConfiguration(path));
     }
 }

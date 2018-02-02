@@ -9,7 +9,7 @@ namespace BigWatsonDotNet.Interfaces
     /// <summary>
     /// The base interface for readonly exceptions managers
     /// </summary>
-    public interface IReadOnlyExceptionManager : IEquatable<IReadOnlyExceptionManager>
+    public interface IReadOnlyExceptionsManager : IEquatable<IReadOnlyExceptionsManager>
     {
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use

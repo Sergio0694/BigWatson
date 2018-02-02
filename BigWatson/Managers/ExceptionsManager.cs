@@ -17,9 +17,9 @@ namespace BigWatsonDotNet.Managers
     /// <summary>
     /// A complete exceptions manager with read and write permission
     /// </summary>
-    internal sealed class ReadWriteExceptionsManager : ReadOnlyExceptionsManager, IExceptionsManager
+    internal sealed class ExceptionsManager : ReadOnlyExceptionsManager, IExceptionsManager
     {
-        public ReadWriteExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
+        public ExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
         #region Write APIs
 

@@ -90,7 +90,7 @@ namespace BigWatsonDotNet.Unit
             BigWatson.Instance.ExportDatabaseAsync(path).Wait();
 
             // Check
-            IReadOnlyExceptionManager loaded = BigWatson.Load(path);
+            IReadOnlyExceptionsManager loaded = BigWatson.Load(path);
             ExceptionsCollection reports = loaded.LoadCrashReportsAsync().Result;
             Assert.IsTrue(reports.ExceptionsCount == 1);
             Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
