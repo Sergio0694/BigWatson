@@ -56,7 +56,7 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
-        [Pure, ItemNotNull]
+        [Pure]
         Task ExportDatabaseAsJsonAsync([NotNull] String path);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
@@ -20,6 +21,8 @@ namespace BigWatsonDotNet.Managers
         protected RealmConfiguration Configuration { get; }
 
         public ReadOnlyExceptionsManager([NotNull] RealmConfiguration configuration) => Configuration = configuration;
+
+        #region Reports loading
 
         /// <inheritdoc/>
         public async Task<ExceptionsCollection> LoadCrashReportsAsync()
@@ -115,5 +118,35 @@ namespace BigWatsonDotNet.Managers
                         new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
             }
         }
+
+        #endregion
+
+        #region IEquatable
+
+        /// <inheritdoc/>
+        public bool Equals(IReadOnlyExceptionManager other)
+        {
+            if (other == null) return false;
+            if (ReferenceEquals(other, this)) return true;
+            return other.GetType() == GetType() &&
+                   other is ReadOnlyExceptionsManager manager &&
+                   manager.Configuration.DatabasePath.Equals(Configuration.DatabasePath);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => Equals(obj as IReadOnlyExceptionManager);
+
+        /// <inheritdoc/>
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // DatabasePath is not readonly, but can't be changed after initialization (so it's fine here)
+                return (17 + GetType().GetHashCode()) * 31 + Configuration.DatabasePath.GetHashCode();
+            }
+        }
+
+        #endregion
     }
 }
