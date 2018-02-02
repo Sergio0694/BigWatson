@@ -97,5 +97,41 @@ namespace BigWatsonDotNet.Unit
             Assert.IsTrue(reports.Exceptions.First().Message.Equals("Export test"));
             File.Delete(path);
         }
+
+        [TestMethod]
+        public void JsonExportTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new InvalidOperationException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new NotImplementedException("We're being too lazy here!"), 
+                new ArgumentException("This parameter was too weird to be evaluated")
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
+            Assert.IsTrue(reports.ExceptionsCount == exceptions.Length);
+            String json = BigWatson.Instance.ExportDatabaseAsJsonAsync().Result;
+            Assert.IsTrue(json.Length > 0);
+            foreach (Exception exception in exceptions)
+            {
+                Assert.IsTrue(json.Contains(exception.GetType().Name));
+                Assert.IsTrue(json.Contains(exception.Message));
+            }
+        }
     }
 }
