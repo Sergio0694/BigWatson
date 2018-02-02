@@ -3,7 +3,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatson.Models
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that represents a standalone crash report

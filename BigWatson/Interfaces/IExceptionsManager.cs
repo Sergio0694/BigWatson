@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using BigWatson.Models;
+using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
 
-namespace BigWatson.Interfaces
+namespace BigWatsonDotNet.Interfaces
 {
     /// <summary>
     /// An interface for an exceptions manager instance with write permission
     /// </summary>
-    public interface IExceptionsManager : IExceptionsReader
+    public interface IExceptionsManager : IReadOnlyExceptionManager
     {
         /// <summary>
         /// Saves the crash report into local storage

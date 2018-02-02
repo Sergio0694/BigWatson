@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatson.Models
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that wraps a grouped collection of saved exception reports

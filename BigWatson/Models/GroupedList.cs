@@ -2,7 +2,7 @@
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatson.Models
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that represents a single group of data to display to the end user

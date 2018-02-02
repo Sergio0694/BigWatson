@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using BigWatson.Core;
-using BigWatson.Interfaces;
+using System.Runtime.CompilerServices;
+using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Managers;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatson
+namespace BigWatsonDotNet
 {
     /// <summary>
     /// The entry point with all the APIs exposed by the library
     /// </summary>
-    public static class ExceptionsManager
+    public static class BigWatson
     {
         #region Memory logger
 
@@ -40,6 +41,7 @@ namespace BigWatson
         [NotNull]
         public static Func<long> UsedMemoryParser
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _UsedMemoryParser ?? DefaultMemoryParser;
             set => _UsedMemoryParser = value;
         }
@@ -56,7 +58,7 @@ namespace BigWatson
             {
                 String
                     data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    folder = Path.Combine(data, nameof(ExceptionsManager)),
+                    folder = Path.Combine(data, nameof(BigWatson)),
                     path = Path.Combine(folder, "crashreports.realm");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
                 return new RealmConfiguration(path);
@@ -74,11 +76,11 @@ namespace BigWatson
         public static IExceptionsManager Default => _Default ?? (_Default = new ReadWriteExceptionsManager(DefaultConfiguration));
 
         /// <summary>
-        /// Gets an <see cref="IExceptionsReader"/> instance to access crash reports from an external database
+        /// Gets an <see cref="IReadOnlyExceptionManager"/> instance to access crash reports from an external database
         /// </summary>
         /// <param name="path">The path to the exported crash reports database to open</param>
         [PublicAPI]
         [Pure, NotNull]
-        public static IExceptionsReader Load([NotNull] String path) => new ReadonlyExceptionsManager(new RealmConfiguration(path));
+        public static IReadOnlyExceptionManager Load([NotNull] String path) => new ReadOnlyExceptionsManager(new RealmConfiguration(path));
     }
 }

@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BigWatson.Interfaces;
-using BigWatson.Models;
+using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatson.Core
+namespace BigWatsonDotNet.Managers
 {
     /// <summary>
     /// A readonly exceptions manager to provider access to any kind of crash reports database
     /// </summary>
-    internal class ReadonlyExceptionsManager : IExceptionsReader
+    internal class ReadOnlyExceptionsManager : IReadOnlyExceptionManager
     {
         /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
@@ -20,7 +20,7 @@ namespace BigWatson.Core
         [NotNull]
         protected RealmConfiguration Configuration { get; }
 
-        public ReadonlyExceptionsManager([NotNull] RealmConfiguration configuration) => Configuration = configuration;
+        public ReadOnlyExceptionsManager([NotNull] RealmConfiguration configuration) => Configuration = configuration;
 
         /// <inheritdoc/>
         public async Task<ExceptionsCollection> LoadCrashReportsAsync()

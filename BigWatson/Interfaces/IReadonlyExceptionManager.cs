@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
-using BigWatson.Models;
+using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatson.Interfaces
+namespace BigWatsonDotNet.Interfaces
 {
     /// <summary>
     /// The base interface for readonly exceptions managers
     /// </summary>
-    public interface IExceptionsReader
+    public interface IReadOnlyExceptionManager
     {
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use

@@ -3,17 +3,17 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using BigWatson.Interfaces;
-using BigWatson.Models;
+using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatson.Core
+namespace BigWatsonDotNet.Managers
 {
     /// <summary>
     /// A complete exceptions manager with read and write permission
     /// </summary>
-    internal sealed class ReadWriteExceptionsManager : ReadonlyExceptionsManager, IExceptionsManager
+    internal sealed class ReadWriteExceptionsManager : ReadOnlyExceptionsManager, IExceptionsManager
     {
         public ReadWriteExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
@@ -32,7 +32,7 @@ namespace BigWatson.Core
                     Message = e.Message,
                     StackTrace = e.StackTrace,
                     AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                    UsedMemory = ExceptionsManager.UsedMemoryParser(),
+                    UsedMemory = BigWatson.UsedMemoryParser(),
                     CrashTime = DateTime.Now.ToBinary()
                 };
                 realm.Add(report);

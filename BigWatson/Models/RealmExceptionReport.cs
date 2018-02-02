@@ -1,7 +1,7 @@
 ﻿using System;
 using Realms;
 
-namespace BigWatson.Models
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that maps the database table used to store app crashes

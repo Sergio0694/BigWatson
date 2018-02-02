@@ -10,6 +10,7 @@
     <Copyright>Copyright (c) 2017 Sergio Pedri</Copyright>
     <Description>A complete, easy to use .NET Standard 2.0 offline exception logging library</Description>
     <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test</PackageTags>
+    <RootNamespace>BigWatsonDotNet</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
