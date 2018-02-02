@@ -74,7 +74,7 @@ namespace BigWatsonDotNet.Models
             Source = report.Source ?? String.Empty;
             StackTrace = report.StackTrace ?? String.Empty;
             AppVersion = Version.Parse(report.AppVersion);
-            CrashTime = DateTime.FromBinary(report.CrashTime);
+            CrashTime = report.CrashTime.LocalDateTime;
             UsedMemory = report.UsedMemory;
         }
 

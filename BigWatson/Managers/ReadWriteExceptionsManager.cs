@@ -17,6 +17,8 @@ namespace BigWatsonDotNet.Managers
     {
         public ReadWriteExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
+        #region Write APIs
+
         /// <inheritdoc/>
         public void Log(Exception e)
         {
@@ -33,7 +35,7 @@ namespace BigWatsonDotNet.Managers
                     StackTrace = e.StackTrace,
                     AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                     UsedMemory = BigWatson.UsedMemoryParser(),
-                    CrashTime = DateTime.Now.ToBinary()
+                    CrashTime = DateTimeOffset.Now
                 };
                 realm.Add(report);
                 transaction.Commit();
@@ -58,7 +60,7 @@ namespace BigWatsonDotNet.Managers
             {
                 foreach (RealmExceptionReport old in
                     from entry in realm.All<RealmExceptionReport>().ToArray()
-                    where DateTime.Now.Subtract(DateTime.FromBinary(entry.CrashTime)) > threshold
+                    where DateTime.Now.Subtract(entry.CrashTime.DateTime) > threshold
                     select entry)
                 {
                     realm.Remove(old);
@@ -67,6 +69,10 @@ namespace BigWatsonDotNet.Managers
 
             Realm.Compact();
         }
+
+        #endregion
+
+        #region File export
 
         /// <inheritdoc/>
         public Task<Stream> ExportDatabaseAsync()
@@ -111,5 +117,23 @@ namespace BigWatsonDotNet.Managers
                 }
             });
         }
+
+        #endregion
+
+        #region JSON export
+
+        /// <inheritdoc/>
+        public Task<string> ExportDatabaseAsJsonAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task ExportDatabaseAsJsonAsync(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
