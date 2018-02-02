@@ -49,6 +49,12 @@ namespace BigWatsonDotNet
         #endregion
 
         /// <summary>
+        /// Gets the .realm file extension used by the crash reports databases
+        /// </summary>
+        [NotNull]
+        public const String DatabaseExtension = ".realm";
+
+        /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
         /// </summary>
         [NotNull]
@@ -59,7 +65,7 @@ namespace BigWatsonDotNet
                 String
                     data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     folder = Path.Combine(data, nameof(BigWatson)),
-                    path = Path.Combine(folder, "crashreports.realm");
+                    path = Path.Combine(folder, $@"crashreports{DatabaseExtension}");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
                 return new RealmConfiguration(path);
             }
