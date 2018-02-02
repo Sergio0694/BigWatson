@@ -229,5 +229,61 @@ namespace BigWatson
         }
 
         #endregion
+
+        #region Tools
+
+        /// <summary>
+        /// Copies the content of the current crash reports database into a <see cref="Stream"/>
+        /// </summary>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        public static Task<Stream> ExportDatabaseAsync()
+        {
+            return Task.Run(() =>
+            {
+                // Copy the current database
+                Stream stream = new MemoryStream();
+                using (FileStream file = File.OpenRead(DefaultConfiguration.DatabasePath))
+                {
+                    byte[] buffer = new byte[8192];
+                    while (true)
+                    {
+                        int read = file.Read(buffer, 0, buffer.Length);
+                        if (read > 0) stream.Write(buffer, 0, read);
+                        else break;
+                    }
+                }
+
+                // Seek the result stream back to the start
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream;
+            });
+        }
+
+        /// <summary>
+        /// Copies the content of the current crash reports database into a backup file with the specified path
+        /// </summary>
+        /// <param name="path">The path to the target backup file</param>
+        [PublicAPI]
+        public static Task ExportDatabaseAsync([NotNull] String path)
+        {
+            return Task.Run(() =>
+            {
+                using (FileStream
+                    source = File.OpenRead(DefaultConfiguration.DatabasePath),
+                    destination = File.OpenWrite(path))
+                {
+                    byte[] buffer = new byte[8192];
+                    while (true)
+                    {
+                        int read = source.Read(buffer, 0, buffer.Length);
+                        if (read > 0) destination.Write(buffer, 0, read);
+                        else break;
+                    }
+                }
+            });
+        }
+
+        #endregion
     }
 }
