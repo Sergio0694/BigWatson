@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Sergio Pedri</Authors>
+    <Company>Sergio Pedri</Company>
+    <PackageProjectUrl>https://github.com/Sergio0694/BigWatson</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Sergio0694/BigWatson/blob/master/LICENSE.md</PackageLicenseUrl>
+    <Copyright>Copyright (c) 2017 Sergio Pedri</Copyright>
+    <Description>A complete, easy to use .NET Standard 2.0 offline exception logging library</Description>
+    <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
