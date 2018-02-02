@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -56,8 +57,13 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                IQueryable<RealmExceptionReport> old = realm.All<RealmExceptionReport>().Where(entry => DateTime.Now.Subtract(DateTime.FromBinary(entry.CrashTime)) > threshold);
-                realm.RemoveRange(old);
+                foreach (RealmExceptionReport old in
+                    from entry in realm.All<RealmExceptionReport>().ToArray()
+                    where DateTime.Now.Subtract(DateTime.FromBinary(entry.CrashTime)) > threshold
+                    select entry)
+                {
+                    realm.Remove(old);
+                }
             }
 
             Realm.Compact();

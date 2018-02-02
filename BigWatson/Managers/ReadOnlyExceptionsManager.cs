@@ -66,6 +66,7 @@ namespace BigWatsonDotNet.Managers
                         orderby exception.CrashTime descending
                         group exception by exception.AppVersion
                         into header
+                        orderby header.Key descending
                         select header
                     let crashes = grouped.ToArray()
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
@@ -81,7 +82,7 @@ namespace BigWatsonDotNet.Managers
                 // Get the exceptions with the same type
                 String type = typeof(T).ToString();
                 ExceptionReport[] exceptions = 
-                    (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type))
+                    (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)).ToArray()
                      select new ExceptionReport(entry)).ToArray();
 
                 // Group by version
@@ -91,6 +92,7 @@ namespace BigWatsonDotNet.Managers
                         orderby exception.CrashTime descending
                         group exception by exception.AppVersion
                         into header
+                        orderby header.Key descending
                         select header
                     let crashes = grouped.ToArray()
                     select new GroupedList<VersionExtendedInfo, ExceptionReport>(
