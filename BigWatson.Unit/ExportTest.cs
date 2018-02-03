@@ -11,51 +11,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace BigWatsonDotNet.Unit
 {
     [TestClass]
-    [TestCategory(nameof(MainTest))]
-    public class MainTest
+    [TestCategory(nameof(ExportTest))]
+    public class ExportTest
     {
-        [TestMethod]
-        public void LogTest()
-        {
-            // Log
-            BigWatson.Instance.ResetAsync().Wait();
-            try
-            {
-                throw new InvalidOperationException("Hello world!");
-            }
-            catch (Exception e)
-            {
-                BigWatson.Instance.Log(e);
-            }
-
-            // Checks
-            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.LogsCount == 1);
-            Assert.IsTrue(reports.Logs.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
-            Assert.IsTrue(reports.Logs.First().Message.Equals("Hello world!"));
-            Assert.IsTrue(DateTime.Now.Subtract(reports.Logs.First().Timestamp) < TimeSpan.FromMinutes(1));
-        }
-
-        [TestMethod]
-        public void MemoryParserTest()
-        {
-            // Log
-            BigWatson.Instance.ResetAsync().Wait();
-            BigWatson.UsedMemoryParser = () => 128L;
-            try
-            {
-                throw new InvalidOperationException();
-            }
-            catch (Exception e)
-            {
-                BigWatson.Instance.Log(e);
-            }
-
-            // Checks
-            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.Logs.First().UsedMemory == 128L);
-        }
-
         /// <summary>
         /// Gets the path to the local assets folder
         /// </summary>

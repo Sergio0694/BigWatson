@@ -31,16 +31,17 @@ namespace BigWatsonDotNet.Interfaces
         Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<T>() where T : Exception;
 
         /// <summary>
-        /// 
+        /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
         /// </summary>
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<LogsCollection<Event>> LoadEventsAsync();
 
         /// <summary>
-        /// 
+        /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
+        /// for the logs with the specified priority level
         /// </summary>
-        /// <param name="priority"></param>
+        /// <param name="priority">The target priority of the event logs to retrieve</param>
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority);

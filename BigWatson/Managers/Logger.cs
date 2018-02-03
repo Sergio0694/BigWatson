@@ -72,16 +72,19 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                foreach (RealmExceptionReport old in
-                    from entry in realm.All<RealmExceptionReport>().ToArray()
-                    where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                    select entry)
+                await realm.WriteAsync(r =>
                 {
-                    realm.Remove(old);
-                }
+                    foreach (RealmExceptionReport old in
+                        from entry in r.All<RealmExceptionReport>().ToArray()
+                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                        select entry)
+                    {
+                        r.Remove(old);
+                    }
+                });
             }
 
-            Realm.Compact();
+            Realm.Compact(Configuration);
         }
 
         /// <inheritdoc/>
@@ -89,28 +92,31 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                // Execute the query
-                IEnumerable<RealmObject> query;
-                if (typeof(T) == typeof(Event))
-                    query =
-                        from entry in realm.All<RealmEvent>().ToArray()
-                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                        select entry;
-                else if (typeof(T) == typeof(ExceptionReport)) 
-                    query = 
-                        from entry in realm.All<RealmExceptionReport>().ToArray()
-                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                        select entry;
-                else throw new ArgumentException("The input type is not valid", nameof(T));
-
-                // Trim the database
-                foreach (RealmObject item in query)
+                await realm.WriteAsync(r =>
                 {
-                    realm.Remove(item);
-                }
+                    // Execute the query
+                    IEnumerable<RealmObject> query;
+                    if (typeof(T) == typeof(Event))
+                        query =
+                            from entry in r.All<RealmEvent>().ToArray()
+                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                            select entry;
+                    else if (typeof(T) == typeof(ExceptionReport))
+                        query =
+                            from entry in r.All<RealmExceptionReport>().ToArray()
+                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                            select entry;
+                    else throw new ArgumentException("The input type is not valid", nameof(T));
+
+                    // Trim the database
+                    foreach (RealmObject item in query)
+                    {
+                        r.Remove(item);
+                    }
+                });
             }
 
-            Realm.Compact();
+            Realm.Compact(Configuration);
         }
 
         /// <inheritdoc/>
@@ -118,9 +124,14 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                realm.RemoveRange(realm.All<RealmEvent>());
-                realm.RemoveRange(realm.All<RealmExceptionReport>());
+                await realm.WriteAsync(r =>
+                {
+                    r.RemoveRange(r.All<RealmEvent>());
+                    r.RemoveRange(r.All<RealmExceptionReport>());
+                });
             }
+
+            Realm.Compact(Configuration);
         }
 
         /// <inheritdoc/>
@@ -128,15 +139,20 @@ namespace BigWatsonDotNet.Managers
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                // Execute the query
-                IQueryable<RealmObject> query;
-                if (typeof(T) == typeof(Event)) query = realm.All<RealmEvent>();
-                else if (typeof(T) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>();
-                else throw new ArgumentException("The input type is not valid", nameof(T));
+                await realm.WriteAsync(r =>
+                {
+                    // Execute the query
+                    IQueryable<RealmObject> query;
+                    if (typeof(T) == typeof(Event)) query = r.All<RealmEvent>();
+                    else if (typeof(T) == typeof(ExceptionReport)) query = r.All<RealmExceptionReport>();
+                    else throw new ArgumentException("The input type is not valid", nameof(T));
 
-                // Delete the items
-                realm.RemoveRange(query);
+                    // Delete the items
+                    r.RemoveRange(query);
+                });
             }
+
+            Realm.Compact(Configuration);
         }
 
         #endregion
