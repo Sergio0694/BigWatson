@@ -1,5 +1,6 @@
 ﻿using System;
 using BigWatsonDotNet.Enums;
+using BigWatsonDotNet.Interfaces;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Models.Events
@@ -7,7 +8,7 @@ namespace BigWatsonDotNet.Models.Events
     /// <summary>
     /// A class that represents a standalone aapp event
     /// </summary>
-    public sealed class Event
+    public sealed class Event : ILog
     {
         /// <summary>
         /// Gets the priority associated with the log
@@ -20,15 +21,10 @@ namespace BigWatsonDotNet.Models.Events
         [NotNull]
         public String Message { get; }
 
-        /// <summary>
-        /// Gets the timestamp for the current log
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime Timestamp { get; }
 
-        /// <summary>
-        /// Gets the app version for the log
-        /// </summary>
-        [NotNull]
+        /// <inheritdoc/>
         public Version AppVersion { get; }
 
         internal Event([NotNull] RealmEvent log)

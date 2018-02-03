@@ -32,7 +32,7 @@ namespace BigWatsonDotNet.Unit
             Assert.IsTrue(reports.ExceptionsCount == 1);
             Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
             Assert.IsTrue(reports.Exceptions.First().Message.Equals("Hello world!"));
-            Assert.IsTrue(DateTime.Now.Subtract(reports.Exceptions.First().CrashTime) < TimeSpan.FromMinutes(1));
+            Assert.IsTrue(DateTime.Now.Subtract(reports.Exceptions.First().Timestamp) < TimeSpan.FromMinutes(1));
         }
 
         [TestMethod]

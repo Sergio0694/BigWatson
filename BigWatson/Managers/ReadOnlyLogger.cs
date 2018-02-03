@@ -50,7 +50,7 @@ namespace BigWatsonDotNet.Managers
                             let sameType =
                                 (from item in data
                                     where item.ExceptionType.Equals(raw.ExceptionType)
-                                    orderby item.CrashTime descending
+                                    orderby item.Timestamp descending
                                     select item).ToArray()
                             let versions =
                                 (from entry in sameType
@@ -60,8 +60,8 @@ namespace BigWatsonDotNet.Managers
                                     select version.Key).ToArray()
                             select new ExceptionReport(raw,
                                 versions[0], versions[versions.Length - 1], sameType.Length,
-                                sameType[0].CrashTime, sameType[sameType.Length - 1].CrashTime)
-                        orderby exception.CrashTime descending
+                                sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                        orderby exception.Timestamp descending
                         group exception by exception.AppVersion
                         into header
                         orderby header.Key descending

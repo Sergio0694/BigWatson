@@ -49,8 +49,8 @@ namespace BigWatsonDotNet.Models.Exceptions
         /// <summary>
         /// Gets the crash time for the report
         /// </summary>
-        [JsonProperty(nameof(CrashTime), Order = 6)]
-        public DateTimeOffset CrashTime { get; set; }
+        [JsonProperty(nameof(Timestamp), Order = 6)]
+        public DateTimeOffset Timestamp { get; set; }
 
         /// <summary>
         /// Gets the app version for the report

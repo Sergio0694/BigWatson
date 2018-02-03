@@ -28,40 +28,41 @@ namespace BigWatsonDotNet.Managers
         /// <inheritdoc/>
         public void Log(Exception e)
         {
-            using (Realm realm = Realm.GetInstance(Configuration))
-            using (Transaction transaction = realm.BeginWrite())
+            RealmExceptionReport report = new RealmExceptionReport
             {
-                RealmExceptionReport report = new RealmExceptionReport
-                {
-                    Uid = Guid.NewGuid().ToString(),
-                    ExceptionType = e.GetType().ToString(),
-                    HResult = e.HResult,
-                    Message = e.Message,
-                    StackTrace = e.StackTrace,
-                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                    UsedMemory = BigWatson.UsedMemoryParser(),
-                    CrashTime = DateTimeOffset.Now
-                };
-                realm.Add(report);
-                transaction.Commit();
-            }
+                Uid = Guid.NewGuid().ToString(),
+                ExceptionType = e.GetType().ToString(),
+                HResult = e.HResult,
+                Message = e.Message,
+                StackTrace = e.StackTrace,
+                AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                UsedMemory = BigWatson.UsedMemoryParser(),
+                Timestamp = DateTimeOffset.Now
+            };
+            Log(report);
         }
 
         /// <inheritdoc/>
         public void Log(EventPriority priority, String message)
         {
+            RealmEvent report = new RealmEvent
+            {
+                Uid = Guid.NewGuid().ToString(),
+                Priority = (byte)priority,
+                Message = message,
+                AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                Timestamp = DateTimeOffset.Now
+            };
+            Log(report);
+        }
+
+        // Inserts a single item in the local database
+        private void Log([NotNull] RealmObject item)
+        {
             using (Realm realm = Realm.GetInstance(Configuration))
             using (Transaction transaction = realm.BeginWrite())
             {
-                RealmEvent report = new RealmEvent
-                {
-                    Uid = Guid.NewGuid().ToString(),
-                    Priority = (byte)priority,
-                    Message = message,
-                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                    Timestamp = DateTimeOffset.Now
-                };
-                realm.Add(report);
+                realm.Add(item);
                 transaction.Commit();
             }
         }
@@ -76,7 +77,7 @@ namespace BigWatsonDotNet.Managers
             {
                 foreach (RealmExceptionReport old in
                     from entry in realm.All<RealmExceptionReport>().ToArray()
-                    where DateTime.Now.Subtract(entry.CrashTime.DateTime) > threshold
+                    where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                     select entry)
                 {
                     realm.Remove(old);
@@ -150,7 +151,7 @@ namespace BigWatsonDotNet.Managers
                 RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                 IList<JObject> jcrashes =
                     (from exception in exceptions
-                     orderby exception.CrashTime descending
+                     orderby exception.Timestamp descending
                      select JObject.FromObject(exception)).ToList();
                 RealmEvent[] events = realm.All<RealmEvent>().ToArray();
                 IList<JObject> jevents =

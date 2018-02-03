@@ -1,4 +1,5 @@
 ﻿using System;
+using BigWatsonDotNet.Interfaces;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Models.Exceptions
@@ -6,7 +7,7 @@ namespace BigWatsonDotNet.Models.Exceptions
     /// <summary>
     /// A class that represents a standalone crash report
     /// </summary>
-    public sealed class ExceptionReport
+    public sealed class ExceptionReport : ILog
     {
         #region Properties
 
@@ -39,16 +40,11 @@ namespace BigWatsonDotNet.Models.Exceptions
         [NotNull]
         public String StackTrace { get; }
 
-        /// <summary>
-        /// Gets the version of the app when the exception was thrown
-        /// </summary>
-        [NotNull]
-        public Version AppVersion { get; }
+        /// <inheritdoc/>
+        public DateTime Timestamp { get; }
 
-        /// <summary>
-        /// Gets the time of the crash
-        /// </summary>
-        public DateTime CrashTime { get; }
+        /// <inheritdoc/>
+        public Version AppVersion { get; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
@@ -56,29 +52,6 @@ namespace BigWatsonDotNet.Models.Exceptions
         public long UsedMemory { get; }
 
         #endregion
-
-        internal ExceptionReport(
-            [NotNull] RealmExceptionReport report,
-            [NotNull] String min, [NotNull] String max, int occurrences,
-            DateTimeOffset recent, DateTimeOffset old)
-        {
-            // Primary
-            ExceptionType = report.ExceptionType;
-            HResult = report.HResult;
-            Message = report.Message ?? String.Empty;
-            Source = report.Source ?? String.Empty;
-            StackTrace = report.StackTrace ?? String.Empty;
-            AppVersion = Version.Parse(report.AppVersion);
-            CrashTime = report.CrashTime.LocalDateTime;
-            UsedMemory = report.UsedMemory;
-
-            // Secondary
-            MinExceptionVersion = Version.Parse(min);
-            MaxExceptionVersion = Version.Parse(max);
-            ExceptionTypeOccurrencies = occurrences;
-            MostRecentCrashTime = recent.LocalDateTime;
-            LeastRecentCrashTime = old.LocalDateTime;
-        }
 
         #region Additional parameters
 
@@ -110,5 +83,28 @@ namespace BigWatsonDotNet.Models.Exceptions
         public DateTime LeastRecentCrashTime { get; }
 
         #endregion
+
+        internal ExceptionReport(
+            [NotNull] RealmExceptionReport report,
+            [NotNull] String min, [NotNull] String max, int occurrences,
+            DateTimeOffset recent, DateTimeOffset old)
+        {
+            // Primary
+            ExceptionType = report.ExceptionType;
+            HResult = report.HResult;
+            Message = report.Message ?? String.Empty;
+            Source = report.Source ?? String.Empty;
+            StackTrace = report.StackTrace ?? String.Empty;
+            AppVersion = Version.Parse(report.AppVersion);
+            Timestamp = report.Timestamp.LocalDateTime;
+            UsedMemory = report.UsedMemory;
+
+            // Secondary
+            MinExceptionVersion = Version.Parse(min);
+            MaxExceptionVersion = Version.Parse(max);
+            ExceptionTypeOccurrencies = occurrences;
+            MostRecentCrashTime = recent.LocalDateTime;
+            LeastRecentCrashTime = old.LocalDateTime;
+        }
     }
 }
