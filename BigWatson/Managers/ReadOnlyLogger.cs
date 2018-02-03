@@ -80,14 +80,37 @@ namespace BigWatsonDotNet.Managers
 
         #region Event logs
 
-        public Task<LogsCollection<Event>> LoadEventsAsync()
-        {
-            throw new NotImplementedException();
-        }
+        /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync() => LoadEventsAsync(r => r.All<RealmEvent>());
 
-        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
+        /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority) 
+            => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == (byte)priority));
+
+        // Loads and prepares an events collection from the input data
+        [Pure, ItemNotNull]
+        private async Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Func<Realm, IQueryable<RealmEvent>> loader)
         {
-            throw new NotImplementedException();
+            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            {
+                RealmEvent[] data = loader(realm).ToArray();
+
+                var query =
+                    from grouped in
+                        from item in
+                            from raw in data
+                            select new Event(raw)
+                        orderby item.Timestamp descending
+                        group item by item.AppVersion
+                        into header
+                        orderby header.Key descending
+                        select header
+                    let logs = grouped.ToArray()
+                    select new GroupedList<VersionInfo, Event>(
+                        new VersionInfo(logs.Length, grouped.Key), logs);
+
+                return new LogsCollection<Event>(query.ToArray());
+            }
         }
 
         #endregion
