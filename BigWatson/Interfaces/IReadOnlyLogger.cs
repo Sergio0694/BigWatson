@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Enums;
+using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Events;
 using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Realms;
@@ -16,7 +19,7 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<ExceptionsCollection> LoadExceptionsAsync();
+        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync();
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
@@ -25,6 +28,21 @@ namespace BigWatsonDotNet.Interfaces
         /// <typeparam name="T">The <see cref="Exception"/> type to look for</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<ExceptionsCollection> LoadExceptionsAsync<T>() where T : Exception;
+        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<T>() where T : Exception;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<LogsCollection<Event>> LoadEventsAsync();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="priority"></param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority);
     }
 }

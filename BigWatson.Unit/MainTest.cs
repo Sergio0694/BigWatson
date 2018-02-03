@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models;
 using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,11 +29,11 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == 1);
-            Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
-            Assert.IsTrue(reports.Exceptions.First().Message.Equals("Hello world!"));
-            Assert.IsTrue(DateTime.Now.Subtract(reports.Exceptions.First().Timestamp) < TimeSpan.FromMinutes(1));
+            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.LogsCount == 1);
+            Assert.IsTrue(reports.Logs.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
+            Assert.IsTrue(reports.Logs.First().Message.Equals("Hello world!"));
+            Assert.IsTrue(DateTime.Now.Subtract(reports.Logs.First().Timestamp) < TimeSpan.FromMinutes(1));
         }
 
         [TestMethod]
@@ -51,8 +52,8 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.Exceptions.First().UsedMemory == 128L);
+            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.Logs.First().UsedMemory == 128L);
         }
 
         /// <summary>
@@ -91,10 +92,10 @@ namespace BigWatsonDotNet.Unit
 
             // Check
             IReadOnlyLogger loaded = BigWatson.Load(path);
-            ExceptionsCollection reports = loaded.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == 1);
-            Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
-            Assert.IsTrue(reports.Exceptions.First().Message.Equals("Export test"));
+            LogsCollection<ExceptionReport> reports = loaded.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.LogsCount == 1);
+            Assert.IsTrue(reports.Logs.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
+            Assert.IsTrue(reports.Logs.First().Message.Equals("Export test"));
             File.Delete(path);
         }
 
@@ -123,8 +124,8 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == exceptions.Length);
+            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.LogsCount == exceptions.Length);
             String json = BigWatson.Instance.ExportAsJsonAsync().Result;
             Assert.IsTrue(json.Length > 0);
             foreach (Exception exception in exceptions)

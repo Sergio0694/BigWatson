@@ -2,8 +2,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Events;
 using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Realms;
@@ -23,13 +25,13 @@ namespace BigWatsonDotNet.Managers
 
         public ReadOnlyLogger([NotNull] RealmConfiguration configuration) => Configuration = configuration;
 
-        #region Crash reports loading
+        #region Crash reports
 
         /// <inheritdoc/>
-        public Task<ExceptionsCollection> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
-        public Task<ExceptionsCollection> LoadExceptionsAsync<T>() where T : Exception
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<T>() where T : Exception
         {
             String type = typeof(T).ToString();
             return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
@@ -37,7 +39,7 @@ namespace BigWatsonDotNet.Managers
 
         // Loads and prepares an exceptions collection from the input data
         [Pure, ItemNotNull]
-        private async Task<ExceptionsCollection> LoadExceptionsAsync([NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
+        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
@@ -70,8 +72,22 @@ namespace BigWatsonDotNet.Managers
                     select new GroupedList<VersionInfo, ExceptionReport>(
                         new VersionInfo(crashes.Length, grouped.Key), crashes);
 
-                return new ExceptionsCollection(query.ToArray());
+                return new LogsCollection<ExceptionReport>(query.ToArray());
             }
+        }
+
+        #endregion
+
+        #region Event logs
+
+        public Task<LogsCollection<Event>> LoadEventsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
