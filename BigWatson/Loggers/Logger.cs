@@ -79,42 +79,45 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task TrimAsync(TimeSpan threshold)
+        public Task TrimAsync(TimeSpan threshold)
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                await realm.WriteAsync(r =>
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
                 {
                     foreach (RealmExceptionReport old in
-                        from entry in r.All<RealmExceptionReport>().ToArray()
+                        from entry in realm.All<RealmExceptionReport>().ToArray()
                         where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                         select entry)
                     {
-                        r.Remove(old);
+                        realm.Remove(old);
                     }
-                });
-            }
+                    transaction.Commit();
+                }
 
-            Realm.Compact(Configuration);
+                Realm.Compact(Configuration);
+            });
         }
 
         /// <inheritdoc/>
-        public async Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
+        public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                await realm.WriteAsync(r =>
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
                 {
                     // Execute the query
                     IEnumerable<RealmObject> query;
                     if (typeof(TLog) == typeof(Event))
                         query =
-                            from entry in r.All<RealmEvent>().ToArray()
+                            from entry in realm.All<RealmEvent>().ToArray()
                             where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                             select entry;
                     else if (typeof(TLog) == typeof(ExceptionReport))
                         query =
-                            from entry in r.All<RealmExceptionReport>().ToArray()
+                            from entry in realm.All<RealmExceptionReport>().ToArray()
                             where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                             select entry;
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
@@ -122,48 +125,53 @@ namespace BigWatsonDotNet.Loggers
                     // Trim the database
                     foreach (RealmObject item in query)
                     {
-                        r.Remove(item);
+                        realm.Remove(item);
                     }
-                });
-            }
+                    transaction.Commit();
+                }
 
-            Realm.Compact(Configuration);
+                Realm.Compact(Configuration);
+            });
         }
 
         /// <inheritdoc/>
-        public async Task ResetAsync()
+        public Task ResetAsync()
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                await realm.WriteAsync(r =>
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
                 {
-                    r.RemoveRange(r.All<RealmEvent>());
-                    r.RemoveRange(r.All<RealmExceptionReport>());
-                });
-            }
+                    realm.RemoveRange(realm.All<RealmEvent>());
+                    realm.RemoveRange(realm.All<RealmExceptionReport>());
+                    transaction.Commit();
+                }
 
-            Realm.Compact(Configuration);
+                Realm.Compact(Configuration);
+            });
         }
 
         /// <inheritdoc/>
-        public async Task ResetAsync<TLog>() where TLog : LogBase
+        public Task ResetAsync<TLog>() where TLog : LogBase
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                await realm.WriteAsync(r =>
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
                 {
                     // Execute the query
                     IQueryable<RealmObject> query;
-                    if (typeof(TLog) == typeof(Event)) query = r.All<RealmEvent>();
-                    else if (typeof(TLog) == typeof(ExceptionReport)) query = r.All<RealmExceptionReport>();
+                    if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>();
+                    else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>();
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
                     // Delete the items
-                    r.RemoveRange(query);
-                });
-            }
+                    realm.RemoveRange(query);
+                    transaction.Commit();
+                }
 
-            Realm.Compact(Configuration);
+                Realm.Compact(Configuration);
+            });
         }
 
         #endregion
@@ -258,37 +266,44 @@ namespace BigWatsonDotNet.Loggers
             using (MemoryStream stream = new MemoryStream())
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                JObject jObj = new JObject();
-
-                // Prepare the logs
-                foreach (Type type in types)
+                JObject jObj = await Task.Run(() =>
                 {
-                    if (type == typeof(ExceptionReport))
+                    JObject temp = new JObject();
+
+                    // Prepare the logs
+                    using (Realm realm = Realm.GetInstance(Configuration))
                     {
-                        RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
-                        IList<JObject> jcrashes = (
-                            from exception in exceptions
-                            where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
-                            orderby exception.Timestamp descending
-                            select JObject.FromObject(exception)).ToList();
-                        jObj["ExceptionsCount"] = jcrashes.Count;
-                        jObj["Exceptions"] = new JArray(jcrashes);
+                        foreach (Type type in types)
+                        {
+                            if (type == typeof(ExceptionReport))
+                            {
+                                RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
+                                IList<JObject> jcrashes = (
+                                    from exception in exceptions
+                                    where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
+                                    orderby exception.Timestamp descending
+                                    select JObject.FromObject(exception)).ToList();
+                                temp["ExceptionsCount"] = jcrashes.Count;
+                                temp["Exceptions"] = new JArray(jcrashes);
+                            }
+                            else if (type == typeof(Event))
+                            {
+                                RealmEvent[] events = realm.All<RealmEvent>().ToArray();
+                                JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
+                                IList<JObject> jevents = (
+                                    from log in events
+                                    where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
+                                    orderby log.Timestamp descending
+                                    select JObject.FromObject(log, converter)).ToList();
+                                temp["EventsCount"] = jevents.Count;
+                                temp["Events"] = new JArray(jevents);
+                            }
+                        }
                     }
-                    else if (type == typeof(Event))
-                    {
-                        RealmEvent[] events = realm.All<RealmEvent>().ToArray();
-                        JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
-                        IList<JObject> jevents = (
-                            from log in events
-                            where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
-                            orderby log.Timestamp descending
-                            select JObject.FromObject(log, converter)).ToList();
-                        jObj["EventsCount"] = jevents.Count;
-                        jObj["Events"] = new JArray(jevents);
-                    }
-                }
+
+                    return temp;
+                });
 
                 // Write the JSON data
                 await jObj.WriteToAsync(jsonWriter);
