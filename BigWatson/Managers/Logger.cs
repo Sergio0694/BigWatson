@@ -87,6 +87,35 @@ namespace BigWatsonDotNet.Managers
             Realm.Compact();
         }
 
+        /// <inheritdoc/>
+        public async Task TrimAsync<T>(TimeSpan threshold) where T : ILog
+        {
+            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            {
+                // Execute the query
+                IEnumerable<RealmObject> query;
+                if (typeof(T) == typeof(Event))
+                    query =
+                        from entry in realm.All<RealmEvent>().ToArray()
+                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                        select entry;
+                else if (typeof(T) == typeof(ExceptionReport)) 
+                    query = 
+                        from entry in realm.All<RealmExceptionReport>().ToArray()
+                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                        select entry;
+                else throw new ArgumentException("The input type is not valid", nameof(T));
+
+                // Trim the database
+                foreach (RealmObject item in query)
+                {
+                    realm.Remove(item);
+                }
+            }
+
+            Realm.Compact();
+        }
+
         #endregion
 
         #region File export

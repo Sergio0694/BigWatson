@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
-using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Interfaces
@@ -27,10 +26,19 @@ namespace BigWatsonDotNet.Interfaces
         void Log(EventPriority priority, [NotNull] String message);
 
         /// <summary>
-        /// Removes all the <see cref="ExceptionReport"/> instances in the databases older than the input <see cref="TimeSpan"/>
+        /// Removes all the logs in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
         Task TrimAsync(TimeSpan threshold);
+
+        /// <summary>
+        /// Removes all the logs of the specified type in the databases older than the input <see cref="TimeSpan"/>
+        /// </summary>
+        /// <typeparam name="T">The type of logs to trim</typeparam>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
+        [PublicAPI]
+        Task TrimAsync<T>(TimeSpan threshold) where T : ILog;
 
         /// <summary>
         /// Deletes all the existing logs present in the database
