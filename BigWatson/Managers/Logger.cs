@@ -185,6 +185,12 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
+        public Task<Stream> ExportAsync<T>() where T : ILog
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task ExportAsync(String path)
         {
             return Task.Run(() =>
@@ -202,6 +208,12 @@ namespace BigWatsonDotNet.Managers
                     }
                 }
             });
+        }
+
+        /// <inheritdoc/>
+        public Task ExportAsync<T>(String path) where T : ILog
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -247,10 +259,22 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
+        public Task<String> ExportAsJsonAsync<T>() where T : ILog
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public async Task ExportAsJsonAsync(String path)
         {
             String json = await ExportAsJsonAsync();
             File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public Task ExportAsJsonAsync<T>(String path) where T : ILog
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
