@@ -200,7 +200,7 @@ namespace BigWatsonDotNet.Managers
         public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<T>() where T : ILog => ExportAsJsonAsync(typeof(T));
+        public Task<String> ExportAsJsonAsync<TLog>() where TLog : ILog => ExportAsJsonAsync(typeof(TLog));
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync(String path)
@@ -210,9 +210,9 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<T>(String path) where T : ILog
+        public async Task ExportAsJsonAsync<TLog>(String path) where TLog : ILog
         {
-            String json = await ExportAsJsonAsync<T>();
+            String json = await ExportAsJsonAsync<TLog>();
             File.WriteAllText(path, json);
         }
 
