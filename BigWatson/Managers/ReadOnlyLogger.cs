@@ -34,7 +34,7 @@ namespace BigWatsonDotNet.Managers
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
         {
-            throw new NotImplementedException();
+            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
         /// <inheritdoc/>
@@ -47,7 +47,8 @@ namespace BigWatsonDotNet.Managers
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
         {
-            throw new NotImplementedException();
+            String type = typeof(TException).ToString();
+            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type) && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
         // Loads and prepares an exceptions collection from the input data
@@ -99,17 +100,19 @@ namespace BigWatsonDotNet.Managers
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(TimeSpan threshold)
         {
-            throw new NotImplementedException();
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
         /// <inheritdoc/>
-        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority) 
-            => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
+        {
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+        }
 
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, TimeSpan threshold)
         {
-            throw new NotImplementedException();
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
         // Loads and prepares an events collection from the input data
