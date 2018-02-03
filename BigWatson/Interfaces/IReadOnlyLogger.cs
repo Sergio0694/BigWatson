@@ -16,7 +16,7 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<ExceptionsCollection> LoadCrashReportsAsync();
+        Task<ExceptionsCollection> LoadExceptionsAsync();
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
@@ -25,6 +25,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <typeparam name="T">The <see cref="Exception"/> type to look for</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<ExceptionsCollection> LoadCrashReportsAsync<T>() where T : Exception;
+        Task<ExceptionsCollection> LoadExceptionsAsync<T>() where T : Exception;
     }
 }

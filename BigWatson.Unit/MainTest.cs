@@ -17,7 +17,7 @@ namespace BigWatsonDotNet.Unit
         public void LogTest()
         {
             // Log
-            BigWatson.Instance.ResetAsync().Wait();
+            BigWatson.Instance.Reset();
             try
             {
                 throw new InvalidOperationException("Hello world!");
@@ -28,7 +28,7 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
+            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.ExceptionsCount == 1);
             Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
             Assert.IsTrue(reports.Exceptions.First().Message.Equals("Hello world!"));
@@ -39,7 +39,7 @@ namespace BigWatsonDotNet.Unit
         public void MemoryParserTest()
         {
             // Log
-            BigWatson.Instance.ResetAsync().Wait();
+            BigWatson.Instance.Reset();
             BigWatson.UsedMemoryParser = () => 128L;
             try
             {
@@ -51,7 +51,7 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
+            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.Exceptions.First().UsedMemory == 128L);
         }
 
@@ -77,7 +77,7 @@ namespace BigWatsonDotNet.Unit
         public void DatabaseExportTest()
         {
             // Log
-            BigWatson.Instance.ResetAsync().Wait();
+            BigWatson.Instance.Reset();
             try
             {
                 throw new InvalidOperationException("Export test");
@@ -87,11 +87,11 @@ namespace BigWatsonDotNet.Unit
                 BigWatson.Instance.Log(e);
             }
             String path = Path.Combine(LocalPath, $"test{BigWatson.DatabaseExtension}");
-            BigWatson.Instance.ExportDatabaseAsync(path).Wait();
+            BigWatson.Instance.ExportAsync(path).Wait();
 
             // Check
             IReadOnlyLogger loaded = BigWatson.Load(path);
-            ExceptionsCollection reports = loaded.LoadCrashReportsAsync().Result;
+            ExceptionsCollection reports = loaded.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.ExceptionsCount == 1);
             Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
             Assert.IsTrue(reports.Exceptions.First().Message.Equals("Export test"));
@@ -102,7 +102,7 @@ namespace BigWatsonDotNet.Unit
         public void JsonExportTest()
         {
             // Log
-            BigWatson.Instance.ResetAsync().Wait();
+            BigWatson.Instance.Reset();
             Exception[] exceptions =
             {
                 new InvalidOperationException("Hello world!"),
@@ -123,9 +123,9 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
+            ExceptionsCollection reports = BigWatson.Instance.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.ExceptionsCount == exceptions.Length);
-            String json = BigWatson.Instance.ExportDatabaseAsJsonAsync().Result;
+            String json = BigWatson.Instance.ExportAsJsonAsync().Result;
             Assert.IsTrue(json.Length > 0);
             foreach (Exception exception in exceptions)
             {

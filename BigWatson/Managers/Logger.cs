@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models.Events;
 using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -26,7 +28,6 @@ namespace BigWatsonDotNet.Managers
         /// <inheritdoc/>
         public void Log(Exception e)
         {
-            // Save the report into the database
             using (Realm realm = Realm.GetInstance(Configuration))
             using (Transaction transaction = realm.BeginWrite())
             {
@@ -47,15 +48,26 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ResetAsync()
+        public void Log(EventPriority priority, String message)
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            using (Realm realm = Realm.GetInstance(Configuration))
             using (Transaction transaction = realm.BeginWrite())
             {
-                realm.RemoveAll<RealmExceptionReport>();
+                RealmEvent report = new RealmEvent
+                {
+                    Uid = Guid.NewGuid().ToString(),
+                    Priority = (byte)priority,
+                    Message = message,
+                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                    Timestamp = DateTimeOffset.Now
+                };
+                realm.Add(report);
                 transaction.Commit();
             }
         }
+
+        /// <inheritdoc/>
+        public void Reset() => Realm.DeleteRealm(Configuration);
 
         /// <inheritdoc/>
         public async Task TrimAsync(TimeSpan threshold)
@@ -79,7 +91,7 @@ namespace BigWatsonDotNet.Managers
         #region File export
 
         /// <inheritdoc/>
-        public Task<Stream> ExportDatabaseAsync()
+        public Task<Stream> ExportAsync()
         {
             return Task.Run(() =>
             {
@@ -103,7 +115,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public Task ExportDatabaseAsync(String path)
+        public Task ExportAsync(String path)
         {
             return Task.Run(() =>
             {
@@ -127,23 +139,31 @@ namespace BigWatsonDotNet.Managers
         #region JSON export
 
         /// <inheritdoc/>
-        public async Task<String> ExportDatabaseAsJsonAsync()
+        public async Task<String> ExportAsJsonAsync()
         {
             using (MemoryStream stream = new MemoryStream())
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                // Serialize to JSON
+                // Prepare the logs
                 RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
-                IList<JObject> list =
+                IList<JObject> jcrashes =
                     (from exception in exceptions
                      orderby exception.CrashTime descending
                      select JObject.FromObject(exception)).ToList();
+                RealmEvent[] events = realm.All<RealmEvent>().ToArray();
+                IList<JObject> jevents =
+                    (from log in events
+                     orderby log.Timestamp descending
+                     select JObject.FromObject(log)).ToList();
+
+                // Write the JSON data
                 JObject jObj = new JObject
                 {
                     ["Count"] = exceptions.Length,
-                    ["Exceptions"] = new JArray(list)
+                    ["Exceptions"] = new JArray(jcrashes),
+                    ["Events"] = new JArray(jevents)
                 };
                 await jObj.WriteToAsync(jsonWriter);
                 await jsonWriter.FlushAsync();
@@ -155,9 +175,9 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ExportDatabaseAsJsonAsync(String path)
+        public async Task ExportAsJsonAsync(String path)
         {
-            String json = await ExportDatabaseAsJsonAsync();
+            String json = await ExportAsJsonAsync();
             File.WriteAllText(path, json);
         }
 

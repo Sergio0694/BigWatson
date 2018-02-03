@@ -9,16 +9,16 @@ namespace BigWatsonDotNet.Models.Exceptions
     /// <summary>
     /// A class that wraps a grouped collection of saved exception reports
     /// </summary>
-    public sealed class ExceptionsCollection : IEnumerable<IGrouping<VersionInfo, ExceptionReport>>
+    public sealed class ExceptionsCollection : IReadOnlyCollection<IGrouping<VersionInfo, ExceptionReport>>
     {
         #region Initialization
 
         // Actual source query
         [NotNull, ItemNotNull]
-        private readonly IEnumerable<IGrouping<VersionInfo, ExceptionReport>> Source;
+        private readonly IReadOnlyCollection<IGrouping<VersionInfo, ExceptionReport>> Source;
 
         // Internal constructor
-        internal ExceptionsCollection([NotNull, ItemNotNull] IEnumerable<IGrouping<VersionInfo, ExceptionReport>> source)
+        internal ExceptionsCollection([NotNull, ItemNotNull] IReadOnlyCollection<IGrouping<VersionInfo, ExceptionReport>> source)
         {
             Source = source;
         }
@@ -26,6 +26,9 @@ namespace BigWatsonDotNet.Models.Exceptions
         #endregion
 
         #region Public APIs
+
+        /// <inheritdoc/>
+        public int Count => Source.Count;
 
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

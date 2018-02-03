@@ -23,92 +23,44 @@ namespace BigWatsonDotNet.Managers
 
         public ReadOnlyLogger([NotNull] RealmConfiguration configuration) => Configuration = configuration;
 
-        #region Reports loading
+        #region Crash reports loading
 
         /// <inheritdoc/>
-        public async Task<ExceptionsCollection> LoadCrashReportsAsync()
+        public Task<ExceptionsCollection> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
+
+        /// <inheritdoc/>
+        public Task<ExceptionsCollection> LoadExceptionsAsync<T>() where T : Exception
         {
-            // Get all the app versions and the exceptions
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
-            {
-                ExceptionReport[] exceptions =
-                    (from entry in realm.All<RealmExceptionReport>().ToArray()
-                     select new ExceptionReport(entry)).ToArray();
-
-                // Update the type occurrencies and the other info
-                foreach (ExceptionReport exception in exceptions)
-                {
-                    // Exceptions with the same type
-                    ExceptionReport[] sameType =
-                        (from item in exceptions
-                         where item.ExceptionType.Equals(exception.ExceptionType)
-                         orderby item.CrashTime descending
-                         select item).ToArray();
-                    exception.ExceptionTypeOccurrencies = sameType.Length;
-
-                    // Update the crash times for the same Exceptions
-                    exception.RecentCrashTime = sameType[0].CrashTime;
-                    exception.LeastRecentCrashTime = sameType[sameType.Length - 1].CrashTime;
-
-                    // Get the app versions for this exception type
-                    Version[] versions =
-                        (from entry in sameType
-                         group entry by entry.AppVersion
-                         into version
-                         orderby version.Key
-                         select version.Key).ToArray();
-
-                    // Update the number of occurrencies and the app version interval
-                    exception.MinExceptionVersion = versions[0];
-                    exception.MaxExceptionVersion = versions[versions.Length - 1];
-                }
-
-                // Create the output collection
-                return new ExceptionsCollection(
-                    from grouped in 
-                        from exception in exceptions
-                        orderby exception.CrashTime descending
-                        group exception by exception.AppVersion
-                        into header
-                        orderby header.Key descending
-                        select header
-                    let crashes = grouped.ToArray()
-                    select new GroupedList<VersionInfo, ExceptionReport>(
-                        new VersionInfo(crashes.Length, grouped.Key), crashes));
-            }
+            String type = typeof(T).ToString();
+            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 
-        /// <inheritdoc/>
-        public async Task<ExceptionsCollection> LoadCrashReportsAsync<T>() where T : Exception
+        // Loads and prepares an exceptions collection from the input data
+        [Pure, ItemNotNull]
+        private async Task<ExceptionsCollection> LoadExceptionsAsync([NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                // Get the exceptions with the same type
-                String type = typeof(T).ToString();
-                ExceptionReport[] exceptions = 
-                    (from entry in realm.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)).ToArray()
-                     select new ExceptionReport(entry)).ToArray();
+                RealmExceptionReport[] data = loader(realm).ToArray();
 
-                // Update the info
-                DateTime
-                    oldest = exceptions.OrderBy(entry => entry.CrashTime).First().CrashTime,
-                    newest = exceptions.OrderBy(entry => entry.CrashTime).Last().CrashTime;
-                Version
-                    min = exceptions.OrderBy(entry => entry.AppVersion).First().AppVersion,
-                    max = exceptions.OrderBy(entry => entry.AppVersion).Last().AppVersion;
-                foreach (ExceptionReport exception in exceptions)
-                {
-                    exception.ExceptionTypeOccurrencies = exceptions.Length;
-                    exception.RecentCrashTime = newest;
-                    exception.LeastRecentCrashTime = oldest;
-                    exception.MinExceptionVersion = min;
-                    exception.MaxExceptionVersion = max;
-                }
-
-                // Group by version
-                return new ExceptionsCollection(
-                    from grouped in 
-                        from exception in exceptions
+                var query =
+                    from grouped in
+                        from exception in
+                            from raw in data
+                            let sameType =
+                                (from item in data
+                                    where item.ExceptionType.Equals(raw.ExceptionType)
+                                    orderby item.CrashTime descending
+                                    select item).ToArray()
+                            let versions =
+                                (from entry in sameType
+                                    group entry by entry.AppVersion
+                                    into version
+                                    orderby version.Key
+                                    select version.Key).ToArray()
+                            select new ExceptionReport(raw,
+                                versions[0], versions[versions.Length - 1], sameType.Length,
+                                sameType[0].CrashTime, sameType[sameType.Length - 1].CrashTime)
                         orderby exception.CrashTime descending
                         group exception by exception.AppVersion
                         into header
@@ -116,7 +68,9 @@ namespace BigWatsonDotNet.Managers
                         select header
                     let crashes = grouped.ToArray()
                     select new GroupedList<VersionInfo, ExceptionReport>(
-                        new VersionInfo(crashes.Length, grouped.Key), crashes));
+                        new VersionInfo(crashes.Length, grouped.Key), crashes);
+
+                return new ExceptionsCollection(query.ToArray());
             }
         }
 
