@@ -89,7 +89,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task TrimAsync<T>(TimeSpan threshold) where T : ILog
+        public async Task TrimAsync<TLog>(TimeSpan threshold) where TLog : ILog
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
@@ -97,17 +97,17 @@ namespace BigWatsonDotNet.Managers
                 {
                     // Execute the query
                     IEnumerable<RealmObject> query;
-                    if (typeof(T) == typeof(Event))
+                    if (typeof(TLog) == typeof(Event))
                         query =
                             from entry in r.All<RealmEvent>().ToArray()
                             where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                             select entry;
-                    else if (typeof(T) == typeof(ExceptionReport))
+                    else if (typeof(TLog) == typeof(ExceptionReport))
                         query =
                             from entry in r.All<RealmExceptionReport>().ToArray()
                             where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
                             select entry;
-                    else throw new ArgumentException("The input type is not valid", nameof(T));
+                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
                     // Trim the database
                     foreach (RealmObject item in query)
@@ -136,7 +136,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ResetAsync<T>() where T : ILog
+        public async Task ResetAsync<TLog>() where TLog : ILog
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
@@ -144,9 +144,9 @@ namespace BigWatsonDotNet.Managers
                 {
                     // Execute the query
                     IQueryable<RealmObject> query;
-                    if (typeof(T) == typeof(Event)) query = r.All<RealmEvent>();
-                    else if (typeof(T) == typeof(ExceptionReport)) query = r.All<RealmExceptionReport>();
-                    else throw new ArgumentException("The input type is not valid", nameof(T));
+                    if (typeof(TLog) == typeof(Event)) query = r.All<RealmEvent>();
+                    else if (typeof(TLog) == typeof(ExceptionReport)) query = r.All<RealmExceptionReport>();
+                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
                     // Delete the items
                     r.RemoveRange(query);

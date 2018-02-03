@@ -35,10 +35,10 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Removes all the logs of the specified type in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
-        /// <typeparam name="T">The type of logs to trim</typeparam>
+        /// <typeparam name="TLog">The type of logs to trim</typeparam>
         /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
-        Task TrimAsync<T>(TimeSpan threshold) where T : ILog;
+        Task TrimAsync<TLog>(TimeSpan threshold) where TLog : ILog;
 
         /// <summary>
         /// Deletes all the existing logs present in the database
@@ -49,8 +49,8 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Deletes all the existing logs of the specified type from the database
         /// </summary>
-        /// <typeparam name="T">The type of logs to delete</typeparam>
-        Task ResetAsync<T>() where T : ILog;
+        /// <typeparam name="TLog">The type of logs to delete</typeparam>
+        Task ResetAsync<TLog>() where TLog : ILog;
 
         /// <summary>
         /// Copies the content of the current logs database into a <see cref="Stream"/>

@@ -32,9 +32,9 @@ namespace BigWatsonDotNet.Managers
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<T>() where T : Exception
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
         {
-            String type = typeof(T).ToString();
+            String type = typeof(TException).ToString();
             return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 

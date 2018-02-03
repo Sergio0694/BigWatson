@@ -28,10 +28,10 @@ namespace BigWatsonDotNet.Interfaces
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
         /// for the app versions that generated the specified <see cref="Exception"/> type
         /// </summary>
-        /// <typeparam name="T">The <see cref="Exception"/> type to look for</typeparam>
+        /// <typeparam name="TException">The <see cref="Exception"/> type to look for</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<T>() where T : Exception;
+        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception;
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
