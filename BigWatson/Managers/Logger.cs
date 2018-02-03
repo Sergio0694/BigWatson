@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
-using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,9 +17,9 @@ namespace BigWatsonDotNet.Managers
     /// <summary>
     /// A complete exceptions manager with read and write permission
     /// </summary>
-    internal sealed class ExceptionsManager : ReadOnlyExceptionsManager, IExceptionsManager
+    internal sealed class Logger : ReadOnlyLogger, ILogger
     {
-        public ExceptionsManager([NotNull] RealmConfiguration configuration) : base(configuration) { }
+        public Logger([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
         #region Write APIs
 

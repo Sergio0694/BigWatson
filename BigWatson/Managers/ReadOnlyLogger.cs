@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Realms;
 
@@ -12,7 +13,7 @@ namespace BigWatsonDotNet.Managers
     /// <summary>
     /// A readonly exceptions manager to provider access to any kind of crash reports database
     /// </summary>
-    internal class ReadOnlyExceptionsManager : IReadOnlyExceptionsManager
+    internal class ReadOnlyLogger : IReadOnlyLogger
     {
         /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
@@ -20,7 +21,7 @@ namespace BigWatsonDotNet.Managers
         [NotNull]
         protected RealmConfiguration Configuration { get; }
 
-        public ReadOnlyExceptionsManager([NotNull] RealmConfiguration configuration) => Configuration = configuration;
+        public ReadOnlyLogger([NotNull] RealmConfiguration configuration) => Configuration = configuration;
 
         #region Reports loading
 
@@ -72,8 +73,8 @@ namespace BigWatsonDotNet.Managers
                         orderby header.Key descending
                         select header
                     let crashes = grouped.ToArray()
-                    select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                        new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
+                    select new GroupedList<VersionInfo, ExceptionReport>(
+                        new VersionInfo(crashes.Length, grouped.Key), crashes));
             }
         }
 
@@ -114,8 +115,8 @@ namespace BigWatsonDotNet.Managers
                         orderby header.Key descending
                         select header
                     let crashes = grouped.ToArray()
-                    select new GroupedList<VersionExtendedInfo, ExceptionReport>(
-                        new VersionExtendedInfo(crashes.Length, grouped.Key), crashes));
+                    select new GroupedList<VersionInfo, ExceptionReport>(
+                        new VersionInfo(crashes.Length, grouped.Key), crashes));
             }
         }
 
@@ -124,17 +125,17 @@ namespace BigWatsonDotNet.Managers
         #region IEquatable
 
         /// <inheritdoc/>
-        public bool Equals(IReadOnlyExceptionsManager other)
+        public bool Equals(IReadOnlyLogger other)
         {
             if (other == null) return false;
             if (ReferenceEquals(other, this)) return true;
             return other.GetType() == GetType() &&
-                   other is ReadOnlyExceptionsManager manager &&
+                   other is ReadOnlyLogger manager &&
                    manager.Configuration.DatabasePath.Equals(Configuration.DatabasePath);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => Equals(obj as IReadOnlyExceptionsManager);
+        public override bool Equals(object obj) => Equals(obj as IReadOnlyLogger);
 
         /// <inheritdoc/>
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Realms;
 
@@ -9,7 +9,7 @@ namespace BigWatsonDotNet.Interfaces
     /// <summary>
     /// The base interface for readonly exceptions managers
     /// </summary>
-    public interface IReadOnlyExceptionsManager : IEquatable<IReadOnlyExceptionsManager>
+    public interface IReadOnlyLogger : IEquatable<IReadOnlyLogger>
     {
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use

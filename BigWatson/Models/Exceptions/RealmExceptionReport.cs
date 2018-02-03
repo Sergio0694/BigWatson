@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Realms;
 
-namespace BigWatsonDotNet.Models
+namespace BigWatsonDotNet.Models.Exceptions
 {
     /// <summary>
     /// A class that maps the database table used to store app crashes

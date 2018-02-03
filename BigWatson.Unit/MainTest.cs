@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BigWatsonDotNet.Interfaces;
-using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -90,7 +90,7 @@ namespace BigWatsonDotNet.Unit
             BigWatson.Instance.ExportDatabaseAsync(path).Wait();
 
             // Check
-            IReadOnlyExceptionsManager loaded = BigWatson.Load(path);
+            IReadOnlyLogger loaded = BigWatson.Load(path);
             ExceptionsCollection reports = loaded.LoadCrashReportsAsync().Result;
             Assert.IsTrue(reports.ExceptionsCount == 1);
             Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));

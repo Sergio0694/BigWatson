@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Interfaces
@@ -9,7 +9,7 @@ namespace BigWatsonDotNet.Interfaces
     /// <summary>
     /// An interface for an exceptions manager instance with write permission
     /// </summary>
-    public interface IExceptionsManager : IReadOnlyExceptionsManager
+    public interface ILogger : IReadOnlyLogger
     {
         /// <summary>
         /// Saves the crash report into local storage

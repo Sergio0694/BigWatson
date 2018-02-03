@@ -4,21 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatsonDotNet.Models
+namespace BigWatsonDotNet.Models.Exceptions
 {
     /// <summary>
     /// A class that wraps a grouped collection of saved exception reports
     /// </summary>
-    public sealed class ExceptionsCollection : IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>>
+    public sealed class ExceptionsCollection : IEnumerable<IGrouping<VersionInfo, ExceptionReport>>
     {
         #region Initialization
 
         // Actual source query
         [NotNull, ItemNotNull]
-        private readonly IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> Source;
+        private readonly IEnumerable<IGrouping<VersionInfo, ExceptionReport>> Source;
 
         // Internal constructor
-        internal ExceptionsCollection([NotNull, ItemNotNull] IEnumerable<IGrouping<VersionExtendedInfo, ExceptionReport>> source)
+        internal ExceptionsCollection([NotNull, ItemNotNull] IEnumerable<IGrouping<VersionInfo, ExceptionReport>> source)
         {
             Source = source;
         }
@@ -31,14 +31,14 @@ namespace BigWatsonDotNet.Models
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc/>
-        public IEnumerator<IGrouping<VersionExtendedInfo, ExceptionReport>> GetEnumerator() => Source.GetEnumerator();
+        public IEnumerator<IGrouping<VersionInfo, ExceptionReport>> GetEnumerator() => Source.GetEnumerator();
 
         private int? _ExceptionsCount;
 
         /// <summary>
         /// Gets the total number of exceptions stored in this instance
         /// </summary>
-        public int ExceptionsCount => _ExceptionsCount ?? (_ExceptionsCount = Source.Sum(g => g.Key.Crashes)).Value;
+        public int ExceptionsCount => _ExceptionsCount ?? (_ExceptionsCount = Source.Sum(g => g.Key.Logs)).Value;
 
         /// <summary>
         /// Gets a list of all the available exception reports stored in this instance
