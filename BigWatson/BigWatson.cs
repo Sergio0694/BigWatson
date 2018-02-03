@@ -10,7 +10,7 @@ using Realms;
 namespace BigWatsonDotNet
 {
     /// <summary>
-    /// The entry point with all the APIs exposed by the library
+    /// The entry point to reach all the available APIs in the library
     /// </summary>
     public static class BigWatson
     {
@@ -75,16 +75,16 @@ namespace BigWatsonDotNet
         private static ILogger _Instance;
 
         /// <summary>
-        /// Gets the local <see cref="ILogger"/> instance to read and write crash reports for the current app
+        /// Gets the local <see cref="ILogger"/> instance to read and write logs for the current app
         /// </summary>
         [PublicAPI]
         [NotNull]
         public static ILogger Instance => _Instance ?? (_Instance = new Logger(DefaultConfiguration));
 
         /// <summary>
-        /// Gets an <see cref="IReadOnlyLogger"/> instance to access crash reports from an external database
+        /// Gets an <see cref="IReadOnlyLogger"/> instance to access logs from an external database
         /// </summary>
-        /// <param name="path">The path to the exported crash reports database to open</param>
+        /// <param name="path">The path to the exported logs database to open</param>
         [PublicAPI]
         [Pure, NotNull]
         public static IReadOnlyLogger Load([NotNull] String path) => new ReadOnlyLogger(new RealmConfiguration(path));
