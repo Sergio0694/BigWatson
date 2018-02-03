@@ -169,13 +169,7 @@ namespace BigWatsonDotNet.Managers
                 Stream stream = new MemoryStream();
                 using (FileStream file = File.OpenRead(Configuration.DatabasePath))
                 {
-                    byte[] buffer = new byte[8192];
-                    while (true)
-                    {
-                        int read = file.Read(buffer, 0, buffer.Length);
-                        if (read > 0) stream.Write(buffer, 0, read);
-                        else break;
-                    }
+                    file.CopyTo(stream);
                 }
 
                 // Seek the result stream back to the start
@@ -193,13 +187,7 @@ namespace BigWatsonDotNet.Managers
                     source = File.OpenRead(Configuration.DatabasePath),
                     destination = File.OpenWrite(path))
                 {
-                    byte[] buffer = new byte[8192];
-                    while (true)
-                    {
-                        int read = source.Read(buffer, 0, buffer.Length);
-                        if (read > 0) destination.Write(buffer, 0, read);
-                        else break;
-                    }
+                    source.CopyTo(destination);
                 }
             });
         }
@@ -209,34 +197,68 @@ namespace BigWatsonDotNet.Managers
         #region JSON export
 
         /// <inheritdoc/>
-        public async Task<String> ExportAsJsonAsync()
+        public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(typeof(ExceptionReport), typeof(Event));
+
+        /// <inheritdoc/>
+        public Task<String> ExportAsJsonAsync<T>() where T : ILog => ExportAsJsonAsync(typeof(T));
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync(String path)
         {
+            String json = await ExportAsJsonAsync();
+            File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync<T>(String path) where T : ILog
+        {
+            String json = await ExportAsJsonAsync<T>();
+            File.WriteAllText(path, json);
+        }
+
+        // Writes the requested logs in JSON format
+        [Pure, ItemNotNull]
+        private async Task<String> ExportAsJsonAsync([NotNull, ItemNotNull] params Type[] types)
+        {
+            // Checks
+            if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));
+            if (types.Distinct().Count() != types.Length) throw new ArgumentException("The input types list can't contain duplicates", nameof(types));
+
+            // Open the destination streams
             using (MemoryStream stream = new MemoryStream())
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
+                JObject jObj = new JObject();
+
                 // Prepare the logs
-                RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
-                IList<JObject> jcrashes =
-                    (from exception in exceptions
-                     orderby exception.Timestamp descending
-                     select JObject.FromObject(exception)).ToList();
-                RealmEvent[] events = realm.All<RealmEvent>().ToArray();
-                JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
-                IList<JObject> jevents =
-                    (from log in events
-                     orderby log.Timestamp descending
-                     select JObject.FromObject(log, converter)).ToList();
+                foreach (Type type in types)
+                {
+                    if (type == typeof(ExceptionReport))
+                    {
+                        RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
+                        IList<JObject> jcrashes =
+                            (from exception in exceptions
+                             orderby exception.Timestamp descending
+                             select JObject.FromObject(exception)).ToList();
+                        jObj["ExceptionsCount"] = jcrashes.Count;
+                        jObj["Exceptions"] = new JArray(jcrashes);
+                    }
+                    else if (type == typeof(Event))
+                    {
+                        RealmEvent[] events = realm.All<RealmEvent>().ToArray();
+                        JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
+                        IList<JObject> jevents =
+                            (from log in events
+                             orderby log.Timestamp descending
+                             select JObject.FromObject(log, converter)).ToList();
+                        jObj["EventsCount"] = jevents.Count;
+                        jObj["Events"] = new JArray(jevents);
+                    }
+                }
 
                 // Write the JSON data
-                JObject jObj = new JObject
-                {
-                    ["ExceptionsCount"] = jcrashes.Count,
-                    ["Exceptions"] = new JArray(jcrashes),
-                    ["EventsCount"] = jevents.Count,
-                    ["Events"] = new JArray(jevents)
-                };
                 await jObj.WriteToAsync(jsonWriter);
                 await jsonWriter.FlushAsync();
 
@@ -244,13 +266,6 @@ namespace BigWatsonDotNet.Managers
                 byte[] bytes = stream.ToArray();
                 return Encoding.UTF8.GetString(bytes);
             }
-        }
-
-        /// <inheritdoc/>
-        public async Task ExportAsJsonAsync(String path)
-        {
-            String json = await ExportAsJsonAsync();
-            File.WriteAllText(path, json);
         }
 
         #endregion

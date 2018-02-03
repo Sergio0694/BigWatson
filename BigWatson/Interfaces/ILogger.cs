@@ -74,11 +74,28 @@ namespace BigWatsonDotNet.Interfaces
         Task<String> ExportAsJsonAsync();
 
         /// <summary>
+        /// Exports the logs of the specified type as a JSON string
+        /// </summary>
+        /// <typeparam name="T">The type of logs to export</typeparam>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync<T>() where T : ILog;
+
+        /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path
         /// </summary>
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
         [Pure]
         Task ExportAsJsonAsync([NotNull] String path);
+
+        /// <summary>
+        /// Exports the logs of the specified type into a JSON file with the specified path
+        /// </summary>
+        /// <typeparam name="T">The type of logs to export</typeparam>
+        /// <param name="path">The path to the target export file</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync<T>([NotNull] String path) where T : ILog;
     }
 }

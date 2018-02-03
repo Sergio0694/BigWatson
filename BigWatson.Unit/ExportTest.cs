@@ -92,9 +92,48 @@ namespace BigWatsonDotNet.Unit
             {
                 Assert.IsTrue(json.Contains(exception.GetType().Name));
                 Assert.IsTrue(json.Contains(exception.Message));
-                Assert.IsTrue(json.Contains(EventPriority.Info.ToString()));
-                Assert.IsTrue(json.Contains(EventPriority.Warning.ToString()));
             }
+            Assert.IsTrue(json.Contains(EventPriority.Info.ToString()));
+            Assert.IsTrue(json.Contains(EventPriority.Warning.ToString()));
+        }
+
+        [TestMethod]
+        public void TypedJsonExportTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new InvalidOperationException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new NotImplementedException("We're being too lazy here!"), 
+                new ArgumentException("This parameter was too weird to be evaluated")
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+            BigWatson.Instance.Log(EventPriority.Info, "Some random info");
+            BigWatson.Instance.Log(EventPriority.Warning, "Watch out!");
+
+            // Checks
+            String
+                json1 = BigWatson.Instance.ExportAsJsonAsync<ExceptionReport>().Result,
+                json2 = BigWatson.Instance.ExportAsJsonAsync<Event>().Result;
+            foreach (Exception exception in exceptions)
+            {
+                Assert.IsTrue(json1.Contains(exception.GetType().Name));
+                Assert.IsTrue(json1.Contains(exception.Message));
+            }
+            Assert.IsTrue(json2.Contains(EventPriority.Info.ToString()));
+            Assert.IsTrue(json2.Contains(EventPriority.Warning.ToString()));
         }
     }
 }
