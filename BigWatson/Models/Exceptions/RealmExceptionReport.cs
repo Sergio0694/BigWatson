@@ -5,7 +5,7 @@ using Realms;
 namespace BigWatsonDotNet.Models.Exceptions
 {
     /// <summary>
-    /// A class that maps the database table used to store app crashes
+    /// A class that represents the crash reports stored in the database
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class RealmExceptionReport : RealmObject
@@ -55,7 +55,7 @@ namespace BigWatsonDotNet.Models.Exceptions
         /// <summary>
         /// Gets the app version for the report
         /// </summary>
-        [JsonProperty(nameof(AppVersion), Order = 7, NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(nameof(AppVersion), Order = 7)]
         public String AppVersion { get; set; }
 
         /// <summary>
