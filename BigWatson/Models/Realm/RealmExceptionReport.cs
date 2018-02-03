@@ -2,10 +2,10 @@
 using Newtonsoft.Json;
 using Realms;
 
-namespace BigWatsonDotNet.Models
+namespace BigWatsonDotNet.Models.Realm
 {
     /// <summary>
-    /// A class that maps the database table used to store app crashes
+    /// A class that represents the crash reports stored in the database
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class RealmExceptionReport : RealmObject
@@ -49,13 +49,13 @@ namespace BigWatsonDotNet.Models
         /// <summary>
         /// Gets the crash time for the report
         /// </summary>
-        [JsonProperty(nameof(CrashTime), Order = 6)]
-        public DateTimeOffset CrashTime { get; set; }
+        [JsonProperty(nameof(Timestamp), Order = 6)]
+        public DateTimeOffset Timestamp { get; set; }
 
         /// <summary>
         /// Gets the app version for the report
         /// </summary>
-        [JsonProperty(nameof(AppVersion), Order = 7, NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(nameof(AppVersion), Order = 7)]
         public String AppVersion { get; set; }
 
         /// <summary>

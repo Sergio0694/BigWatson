@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace BigWatsonDotNet.Models
+namespace BigWatsonDotNet.Models.Misc
 {
     /// <summary>
     /// A class that represents a single group of data to display to the end user

@@ -1,7 +1,7 @@
 ![](http://i.cubeupload.com/XRD8pX.png)
 [![NuGet](https://img.shields.io/nuget/v/BigWatson.svg)](https://www.nuget.org/packages/BigWatson/) [![NuGet](https://img.shields.io/nuget/dt/BigWatson.svg)](https://www.nuget.org/stats/packages/BigWatson?groupby=Version) [![AppVeyor](https://img.shields.io/appveyor/ci/Sergio0694/bigwatson.svg)](https://ci.appveyor.com/project/Sergio0694/bigwatson) [![AppVeyor tests](https://img.shields.io/appveyor/tests/Sergio0694/bigwatson.svg)](https://ci.appveyor.com/project/Sergio0694/bigwatson) [![Twitter Follow](https://img.shields.io/twitter/follow/Sergio0694.svg?style=flat&label=Follow)](https://twitter.com/SergioPedri)
 
-A .NET Standard 2.0 library to easily log and review offline exception reports for an app.
+A .NET Standard 2.0 library to easily log and review offline exception reports and messages for an app.
 
 # Table of Contents
 
@@ -9,6 +9,7 @@ A .NET Standard 2.0 library to easily log and review offline exception reports f
 - [Quick start](#quick-start)
   - [Setup](#setup) 
   - [Browse reports](#browse-reports)
+  - [Event logs](#event-logs)
   - [External databases](#external-databases)
 - [Dependencies](#dependencies)
 - [Credits](#credits)
@@ -42,19 +43,27 @@ And that's it! The library will now automatically log every exception thrown by 
 It is possible to load the complete list of previous exception reports, sorted by app versions, using:
 
 ```C#
-ExceptionsCollection reports = await BigWatson.Instance.LoadCrashReportsAsync();
+var reports = await BigWatson.Instance.LoadCrashReportsAsync();
 ```
 
 To load only the reports of a specific type, just use the following overload:
 
 ```C#
-ExceptionsCollection reports = await BigWatson.Instance.LoadCrashReportsAsync<InvalidOperationException>();
+var reports = await BigWatson.Instance.LoadCrashReportsAsync<InvalidOperationException>();
 ```
 
 It is also possible to trim the local exceptions database by deleting old reports that are no longer needed:
 
 ```C#
 await BigWatson.Instance.TrimAsync(TimeSpan.FromDays(30));
+```
+
+### Event logs
+
+Using **BigWatson** it is also possible to save event reports, which can be useful for analytics or debugging purposes:
+
+```C#
+BigWatson.Instance.Log(EventPriority.Info, "The user used the app 2 times today");
 ```
 
 ## External databases
@@ -75,6 +84,7 @@ ExceptionsCollection clientReports = await watson.LoadCrashReportsAsync();
 The libraries use the following libraries and NuGet packages:
 
 * [Realm.Database](https://www.nuget.org/packages/Realm.Database/)
+* [Newtonsoft.Json](https://www.nuget.org/packages/newtonsoft.json/)
 * [JetBrains.Annotations](https://www.nuget.org/packages/JetBrains.Annotations/)
 
 ## Credits

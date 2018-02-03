@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
 using JetBrains.Annotations;
@@ -10,51 +11,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace BigWatsonDotNet.Unit
 {
     [TestClass]
-    [TestCategory(nameof(MainTest))]
-    public class MainTest
+    [TestCategory(nameof(ExportTest))]
+    public class ExportTest
     {
-        [TestMethod]
-        public void LogTest()
-        {
-            // Log
-            BigWatson.Instance.ResetAsync().Wait();
-            try
-            {
-                throw new InvalidOperationException("Hello world!");
-            }
-            catch (Exception e)
-            {
-                BigWatson.Instance.Log(e);
-            }
-
-            // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == 1);
-            Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
-            Assert.IsTrue(reports.Exceptions.First().Message.Equals("Hello world!"));
-            Assert.IsTrue(DateTime.Now.Subtract(reports.Exceptions.First().CrashTime) < TimeSpan.FromMinutes(1));
-        }
-
-        [TestMethod]
-        public void MemoryParserTest()
-        {
-            // Log
-            BigWatson.Instance.ResetAsync().Wait();
-            BigWatson.UsedMemoryParser = () => 128L;
-            try
-            {
-                throw new InvalidOperationException();
-            }
-            catch (Exception e)
-            {
-                BigWatson.Instance.Log(e);
-            }
-
-            // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
-            Assert.IsTrue(reports.Exceptions.First().UsedMemory == 128L);
-        }
-
         /// <summary>
         /// Gets the path to the local assets folder
         /// </summary>
@@ -87,14 +46,14 @@ namespace BigWatsonDotNet.Unit
                 BigWatson.Instance.Log(e);
             }
             String path = Path.Combine(LocalPath, $"test{BigWatson.DatabaseExtension}");
-            BigWatson.Instance.ExportDatabaseAsync(path).Wait();
+            BigWatson.Instance.ExportAsync(path).Wait();
 
             // Check
-            IReadOnlyExceptionsManager loaded = BigWatson.Load(path);
-            ExceptionsCollection reports = loaded.LoadCrashReportsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == 1);
-            Assert.IsTrue(reports.Exceptions.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
-            Assert.IsTrue(reports.Exceptions.First().Message.Equals("Export test"));
+            IReadOnlyLogger loaded = BigWatson.Load(path);
+            LogsCollection<ExceptionReport> reports = loaded.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.LogsCount == 1);
+            Assert.IsTrue(reports.Logs.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
+            Assert.IsTrue(reports.Logs.First().Message.Equals("Export test"));
             File.Delete(path);
         }
 
@@ -121,16 +80,20 @@ namespace BigWatsonDotNet.Unit
                     BigWatson.Instance.Log(e);
                 }
             }
+            BigWatson.Instance.Log(EventPriority.Info, "Some random info");
+            BigWatson.Instance.Log(EventPriority.Warning, "Watch out!");
 
             // Checks
-            ExceptionsCollection reports = BigWatson.Instance.LoadCrashReportsAsync().Result;
-            Assert.IsTrue(reports.ExceptionsCount == exceptions.Length);
-            String json = BigWatson.Instance.ExportDatabaseAsJsonAsync().Result;
+            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
+            Assert.IsTrue(reports.LogsCount == exceptions.Length);
+            String json = BigWatson.Instance.ExportAsJsonAsync().Result;
             Assert.IsTrue(json.Length > 0);
             foreach (Exception exception in exceptions)
             {
                 Assert.IsTrue(json.Contains(exception.GetType().Name));
                 Assert.IsTrue(json.Contains(exception.Message));
+                Assert.IsTrue(json.Contains(EventPriority.Info.ToString()));
+                Assert.IsTrue(json.Contains(EventPriority.Warning.ToString()));
             }
         }
     }

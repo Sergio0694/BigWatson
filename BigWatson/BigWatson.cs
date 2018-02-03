@@ -72,21 +72,21 @@ namespace BigWatsonDotNet
         }
 
         [CanBeNull]
-        private static IExceptionsManager _Instance;
+        private static ILogger _Instance;
 
         /// <summary>
-        /// Gets the local <see cref="IExceptionsManager"/> instance to read and write crash reports for the current app
+        /// Gets the local <see cref="ILogger"/> instance to read and write crash reports for the current app
         /// </summary>
         [PublicAPI]
         [NotNull]
-        public static IExceptionsManager Instance => _Instance ?? (_Instance = new ExceptionsManager(DefaultConfiguration));
+        public static ILogger Instance => _Instance ?? (_Instance = new Logger(DefaultConfiguration));
 
         /// <summary>
-        /// Gets an <see cref="IReadOnlyExceptionsManager"/> instance to access crash reports from an external database
+        /// Gets an <see cref="IReadOnlyLogger"/> instance to access crash reports from an external database
         /// </summary>
         /// <param name="path">The path to the exported crash reports database to open</param>
         [PublicAPI]
         [Pure, NotNull]
-        public static IReadOnlyExceptionsManager Load([NotNull] String path) => new ReadOnlyExceptionsManager(new RealmConfiguration(path));
+        public static IReadOnlyLogger Load([NotNull] String path) => new ReadOnlyLogger(new RealmConfiguration(path));
     }
 }

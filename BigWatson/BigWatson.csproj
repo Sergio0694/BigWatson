@@ -13,11 +13,12 @@
     <RootNamespace>BigWatsonDotNet</RootNamespace>
     <PackageIconUrl>http://i.cubeupload.com/I7GClf.png</PackageIconUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>• Added database JSON export APIs
-• Code changes and improvements</PackageReleaseNotes>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
-    <Version>1.1.1</Version>
+    <PackageReleaseNotes>• Added events logging APIs
+• APIs improvements
+• Bug fixes</PackageReleaseNotes>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
