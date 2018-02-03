@@ -198,15 +198,28 @@ namespace BigWatsonDotNet.Managers
         #region JSON export
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(typeof(ExceptionReport), typeof(Event));
+        public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(TimeSpan.MaxValue, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(typeof(TLog));
+        public Task<String> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(threshold, typeof(ExceptionReport), typeof(Event));
+
+        /// <inheritdoc/>
+        public Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(TimeSpan.MaxValue, typeof(TLog));
+
+        /// <inheritdoc/>
+        public Task<String> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(threshold, typeof(TLog));
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync(String path)
         {
             String json = await ExportAsJsonAsync();
+            File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync(String path, TimeSpan threshold)
+        {
+            String json = await ExportAsJsonAsync(threshold);
             File.WriteAllText(path, json);
         }
 
@@ -217,9 +230,16 @@ namespace BigWatsonDotNet.Managers
             File.WriteAllText(path, json);
         }
 
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync<TLog>(String path, TimeSpan threshold) where TLog : LogBase
+        {
+            String json = await ExportAsJsonAsync<TLog>(threshold);
+            File.WriteAllText(path, json);
+        }
+
         // Writes the requested logs in JSON format
         [Pure, ItemNotNull]
-        private async Task<String> ExportAsJsonAsync([NotNull, ItemNotNull] params Type[] types)
+        private async Task<String> ExportAsJsonAsync(TimeSpan threshold, [NotNull, ItemNotNull] params Type[] types)
         {
             // Checks
             if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));
@@ -241,6 +261,7 @@ namespace BigWatsonDotNet.Managers
                         RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                         IList<JObject> jcrashes =
                             (from exception in exceptions
+                             where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
                              orderby exception.Timestamp descending
                              select JObject.FromObject(exception)).ToList();
                         jObj["ExceptionsCount"] = jcrashes.Count;
@@ -252,6 +273,7 @@ namespace BigWatsonDotNet.Managers
                         JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                         IList<JObject> jevents =
                             (from log in events
+                             where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
                              orderby log.Timestamp descending
                              select JObject.FromObject(log, converter)).ToList();
                         jObj["EventsCount"] = jevents.Count;

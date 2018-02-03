@@ -29,22 +29,28 @@ namespace BigWatsonDotNet.Managers
         #region Crash reports
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(TimeSpan.MaxValue);
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>());
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception => LoadExceptionsAsync<TException>(TimeSpan.MaxValue);
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
         {
             String type = typeof(TException).ToString();
-            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
+            return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 
         // Loads and prepares an exceptions collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
+        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold, [NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                RealmExceptionReport[] data = loader(realm).ToArray();
+                RealmExceptionReport[] data = loader(realm).ToArray().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold).ToArray();
 
                 var query =
                     from grouped in
@@ -85,8 +91,22 @@ namespace BigWatsonDotNet.Managers
         public Task<LogsCollection<Event>> LoadEventsAsync() => LoadEventsAsync(r => r.All<RealmEvent>());
 
         /// <inheritdoc/>
-        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority) 
-            => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+        public Task<LogsCollection<Event>> LoadEventsAsync(TimeSpan threshold)
+        {
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
+        {
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, TimeSpan threshold)
+        {
+            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+        }
 
         // Loads and prepares an events collection from the input data
         [Pure, ItemNotNull]
