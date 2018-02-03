@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,7 +37,8 @@ namespace BigWatsonDotNet.Loggers
                 ExceptionType = e.GetType().ToString(),
                 HResult = e.HResult,
                 Message = e.Message,
-                StackTrace = e.StackTrace,
+                NativeStackTrace = e.StackTrace,
+                StackTrace = e.Demystify().StackTrace,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                 UsedMemory = BigWatson.UsedMemoryParser(),
                 Timestamp = DateTimeOffset.Now
@@ -61,11 +63,18 @@ namespace BigWatsonDotNet.Loggers
         // Inserts a single item in the local database
         private void Log([NotNull] RealmObject item)
         {
-            using (Realm realm = Realm.GetInstance(Configuration))
-            using (Transaction transaction = realm.BeginWrite())
+            try
             {
-                realm.Add(item);
-                transaction.Commit();
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    realm.Add(item);
+                    transaction.Commit();
+                }
+            }
+            catch
+            {
+                // This must never crash, or it'd invalidate other analytics tools
             }
         }
 
