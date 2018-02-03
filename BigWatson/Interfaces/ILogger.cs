@@ -60,27 +60,11 @@ namespace BigWatsonDotNet.Interfaces
         Task<Stream> ExportAsync();
 
         /// <summary>
-        /// Copies the logs of the specified type into a <see cref="Stream"/>
-        /// </summary>
-        /// <typeparam name="T">The type of logs to export</typeparam>
-        [PublicAPI]
-        [Pure, ItemNotNull]
-        Task<Stream> ExportAsync<T>() where T : ILog;
-
-        /// <summary>
         /// Copies the content of the current logs database into a backup file with the specified path
         /// </summary>
         /// <param name="path">The path to the target backup file</param>
         [PublicAPI]
         Task ExportAsync([NotNull] String path);
-
-        /// <summary>
-        /// Copies the logs of the specified type into a backup file with the specified path
-        /// </summary>
-        /// <typeparam name="T">The type of logs to export</typeparam>
-        /// <param name="path">The path to the target backup file</param>
-        [PublicAPI]
-        Task ExportAsync<T>([NotNull] String path) where T : ILog;
 
         /// <summary>
         /// Exports the content of the current logs database as a JSON string
