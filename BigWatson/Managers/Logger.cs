@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
+using BigWatsonDotNet.Models.Abstract;
 using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -89,7 +90,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task TrimAsync<TLog>(TimeSpan threshold) where TLog : ILog
+        public async Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
@@ -136,7 +137,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ResetAsync<TLog>() where TLog : ILog
+        public async Task ResetAsync<TLog>() where TLog : LogBase
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
@@ -200,7 +201,7 @@ namespace BigWatsonDotNet.Managers
         public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>() where TLog : ILog => ExportAsJsonAsync(typeof(TLog));
+        public Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(typeof(TLog));
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync(String path)
@@ -210,7 +211,7 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<TLog>(String path) where TLog : ILog
+        public async Task ExportAsJsonAsync<TLog>(String path) where TLog : LogBase
         {
             String json = await ExportAsJsonAsync<TLog>();
             File.WriteAllText(path, json);

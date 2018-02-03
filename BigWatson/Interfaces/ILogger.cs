@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
+using BigWatsonDotNet.Models.Abstract;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Interfaces
@@ -28,7 +29,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Removes all the logs in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
-        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="LogBase.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
         Task TrimAsync(TimeSpan threshold);
 
@@ -36,9 +37,9 @@ namespace BigWatsonDotNet.Interfaces
         /// Removes all the logs of the specified type in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
         /// <typeparam name="TLog">The type of logs to trim</typeparam>
-        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="LogBase.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
-        Task TrimAsync<TLog>(TimeSpan threshold) where TLog : ILog;
+        Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase;
 
         /// <summary>
         /// Deletes all the existing logs present in the database
@@ -50,7 +51,7 @@ namespace BigWatsonDotNet.Interfaces
         /// Deletes all the existing logs of the specified type from the database
         /// </summary>
         /// <typeparam name="TLog">The type of logs to delete</typeparam>
-        Task ResetAsync<TLog>() where TLog : ILog;
+        Task ResetAsync<TLog>() where TLog : LogBase;
 
         /// <summary>
         /// Copies the content of the current logs database into a <see cref="Stream"/>
@@ -79,7 +80,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <typeparam name="TLog">The type of logs to export</typeparam>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<String> ExportAsJsonAsync<TLog>() where TLog : ILog;
+        Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase;
 
         /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path
@@ -96,6 +97,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
         [Pure]
-        Task ExportAsJsonAsync<TLog>([NotNull] String path) where TLog : ILog;
+        Task ExportAsJsonAsync<TLog>([NotNull] String path) where TLog : LogBase;
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models.Abstract;
 using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 
@@ -8,7 +8,7 @@ namespace BigWatsonDotNet.Models
     /// <summary>
     /// A class that represents a standalone crash report
     /// </summary>
-    public sealed class ExceptionReport : ILog
+    public sealed class ExceptionReport : LogBase
     {
         #region Properties
 
@@ -40,12 +40,6 @@ namespace BigWatsonDotNet.Models
         /// </summary>
         [NotNull]
         public String StackTrace { get; }
-
-        /// <inheritdoc/>
-        public DateTime Timestamp { get; }
-
-        /// <inheritdoc/>
-        public Version AppVersion { get; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
@@ -89,6 +83,7 @@ namespace BigWatsonDotNet.Models
             [NotNull] RealmExceptionReport report,
             [NotNull] String min, [NotNull] String max, int occurrences,
             DateTimeOffset recent, DateTimeOffset old)
+            : base(report.Timestamp.LocalDateTime, Version.Parse(report.AppVersion))
         {
             // Primary
             ExceptionType = report.ExceptionType;
@@ -96,8 +91,6 @@ namespace BigWatsonDotNet.Models
             Message = report.Message ?? String.Empty;
             Source = report.Source ?? String.Empty;
             StackTrace = report.StackTrace ?? String.Empty;
-            AppVersion = Version.Parse(report.AppVersion);
-            Timestamp = report.Timestamp.LocalDateTime;
             UsedMemory = report.UsedMemory;
 
             // Secondary
