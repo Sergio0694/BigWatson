@@ -16,7 +16,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Realms;
 
-namespace BigWatsonDotNet.Managers
+namespace BigWatsonDotNet.Loggers
 {
     /// <summary>
     /// A complete exceptions manager with read and write permission
@@ -259,11 +259,11 @@ namespace BigWatsonDotNet.Managers
                     if (type == typeof(ExceptionReport))
                     {
                         RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
-                        IList<JObject> jcrashes =
-                            (from exception in exceptions
-                             where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
-                             orderby exception.Timestamp descending
-                             select JObject.FromObject(exception)).ToList();
+                        IList<JObject> jcrashes = (
+                            from exception in exceptions
+                            where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
+                            orderby exception.Timestamp descending
+                            select JObject.FromObject(exception)).ToList();
                         jObj["ExceptionsCount"] = jcrashes.Count;
                         jObj["Exceptions"] = new JArray(jcrashes);
                     }
@@ -271,11 +271,11 @@ namespace BigWatsonDotNet.Managers
                     {
                         RealmEvent[] events = realm.All<RealmEvent>().ToArray();
                         JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
-                        IList<JObject> jevents =
-                            (from log in events
-                             where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
-                             orderby log.Timestamp descending
-                             select JObject.FromObject(log, converter)).ToList();
+                        IList<JObject> jevents = (
+                            from log in events
+                            where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
+                            orderby log.Timestamp descending
+                            select JObject.FromObject(log, converter)).ToList();
                         jObj["EventsCount"] = jevents.Count;
                         jObj["Events"] = new JArray(jevents);
                     }

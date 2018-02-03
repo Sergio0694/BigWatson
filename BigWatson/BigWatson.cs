@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using BigWatsonDotNet.Interfaces;
-using BigWatsonDotNet.Managers;
+using BigWatsonDotNet.Loggers;
 using JetBrains.Annotations;
 using Realms;
 

@@ -11,7 +11,7 @@ using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 using Realms;
 
-namespace BigWatsonDotNet.Managers
+namespace BigWatsonDotNet.Loggers
 {
     /// <summary>
     /// A readonly exceptions manager to provider access to any kind of crash reports database
@@ -56,17 +56,17 @@ namespace BigWatsonDotNet.Managers
                     from grouped in
                         from exception in
                             from raw in data
-                            let sameType =
-                                (from item in data
-                                    where item.ExceptionType.Equals(raw.ExceptionType)
-                                    orderby item.Timestamp descending
-                                    select item).ToArray()
-                            let versions =
-                                (from entry in sameType
-                                    group entry by entry.AppVersion
-                                    into version
-                                    orderby version.Key
-                                    select version.Key).ToArray()
+                            let sameType = (
+                                from item in data
+                                where item.ExceptionType.Equals(raw.ExceptionType)
+                                orderby item.Timestamp descending
+                                select item).ToArray()
+                            let versions = (
+                                from entry in sameType
+                                group entry by entry.AppVersion
+                                into version
+                                orderby version.Key
+                                select version.Key).ToArray()
                             select new ExceptionReport(raw,
                                 versions[0], versions[versions.Length - 1], sameType.Length,
                                 sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
