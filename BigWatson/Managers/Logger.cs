@@ -11,6 +11,7 @@ using BigWatsonDotNet.Models.Events;
 using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Realms;
 
@@ -48,7 +49,7 @@ namespace BigWatsonDotNet.Managers
             RealmEvent report = new RealmEvent
             {
                 Uid = Guid.NewGuid().ToString(),
-                Priority = (byte)priority,
+                Priority = priority,
                 Message = message,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                 Timestamp = DateTimeOffset.Now
@@ -222,16 +223,18 @@ namespace BigWatsonDotNet.Managers
                      orderby exception.Timestamp descending
                      select JObject.FromObject(exception)).ToList();
                 RealmEvent[] events = realm.All<RealmEvent>().ToArray();
+                JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                 IList<JObject> jevents =
                     (from log in events
                      orderby log.Timestamp descending
-                     select JObject.FromObject(log)).ToList();
+                     select JObject.FromObject(log, converter)).ToList();
 
                 // Write the JSON data
                 JObject jObj = new JObject
                 {
-                    ["Count"] = exceptions.Length,
+                    ["ExceptionsCount"] = jcrashes.Count,
                     ["Exceptions"] = new JArray(jcrashes),
+                    ["EventsCount"] = jevents.Count,
                     ["Events"] = new JArray(jevents)
                 };
                 await jObj.WriteToAsync(jsonWriter);

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
 using BigWatsonDotNet.Models.Exceptions;
@@ -80,6 +81,8 @@ namespace BigWatsonDotNet.Unit
                     BigWatson.Instance.Log(e);
                 }
             }
+            BigWatson.Instance.Log(EventPriority.Info, "Some random info");
+            BigWatson.Instance.Log(EventPriority.Warning, "Watch out!");
 
             // Checks
             LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
@@ -90,6 +93,8 @@ namespace BigWatsonDotNet.Unit
             {
                 Assert.IsTrue(json.Contains(exception.GetType().Name));
                 Assert.IsTrue(json.Contains(exception.Message));
+                Assert.IsTrue(json.Contains(EventPriority.Info.ToString()));
+                Assert.IsTrue(json.Contains(EventPriority.Warning.ToString()));
             }
         }
     }

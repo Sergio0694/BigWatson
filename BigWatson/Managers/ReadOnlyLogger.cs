@@ -85,7 +85,7 @@ namespace BigWatsonDotNet.Managers
 
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority) 
-            => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == (byte)priority));
+            => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
 
         // Loads and prepares an events collection from the input data
         [Pure, ItemNotNull]

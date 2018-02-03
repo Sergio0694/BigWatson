@@ -1,4 +1,5 @@
 ﻿using System;
+using BigWatsonDotNet.Enums;
 using Newtonsoft.Json;
 using Realms;
 
@@ -16,11 +17,18 @@ namespace BigWatsonDotNet.Models.Events
         [PrimaryKey]
         public String Uid { get; set; }
 
+        private byte Level { get; set; }
+
         /// <summary>
         /// Gets the priority associated with the log
         /// </summary>
+        [Ignored]
         [JsonProperty(nameof(Priority), Order = 1)]
-        public byte Priority { get; set; }
+        public EventPriority Priority
+        {
+            get => (EventPriority)Level;
+            set => Level = (byte)value;
+        }
 
         /// <summary>
         /// Gets the log message

@@ -29,7 +29,7 @@ namespace BigWatsonDotNet.Models.Events
 
         internal Event([NotNull] RealmEvent log)
         {
-            Priority = (EventPriority)log.Priority;
+            Priority = log.Priority;
             Message = log.Message;
             Timestamp = log.Timestamp.LocalDateTime;
             AppVersion = Version.Parse(log.AppVersion);
