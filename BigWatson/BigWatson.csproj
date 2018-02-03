@@ -12,13 +12,13 @@
     <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test, log</PackageTags>
     <RootNamespace>BigWatsonDotNet</RootNamespace>
     <PackageIconUrl>http://i.cubeupload.com/I7GClf.png</PackageIconUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>• Added events logging APIs
-• APIs improvements
-• Bug fixes</PackageReleaseNotes>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
-    <Version>1.2.0</Version>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>• New APIs added
+• Crash logs with improved stack trace
+• Bug fixes and code tweaks</PackageReleaseNotes>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.3.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
