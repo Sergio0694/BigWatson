@@ -75,8 +75,8 @@ If you want to share your crash reports database with someone else, or if you'd 
 await BigWatson.Instance.ExportDatabaseAsync(pathToExportDatabase);
 
 // Developer side
-IReadOnlyExceptionManager watson = BigWatson.Load(pathToDatabase);
-ExceptionsCollection clientReports = await watson.LoadCrashReportsAsync();
+IReadOnlyLogger logger = BigWatson.Load(pathToDatabase);
+var reports = await logger.LoadCrashReportsAsync();
 ```
 
 ## Dependencies
