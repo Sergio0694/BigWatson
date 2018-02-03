@@ -1,8 +1,9 @@
 ﻿using System;
 using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 
-namespace BigWatsonDotNet.Models.Exceptions
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that represents a standalone crash report

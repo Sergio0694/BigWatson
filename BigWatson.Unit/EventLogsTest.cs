@@ -2,8 +2,6 @@
 using System.Linq;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Models;
-using BigWatsonDotNet.Models.Events;
-using BigWatsonDotNet.Models.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BigWatsonDotNet.Unit

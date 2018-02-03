@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
-using BigWatsonDotNet.Models.Events;
-using BigWatsonDotNet.Models.Exceptions;
+using BigWatsonDotNet.Models.Misc;
+using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 using Realms;
 

@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Realms;
 
-namespace BigWatsonDotNet.Models.Exceptions
+namespace BigWatsonDotNet.Models.Realm
 {
     /// <summary>
     /// A class that represents the crash reports stored in the database

@@ -1,9 +1,10 @@
 ﻿using System;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models.Realm;
 using JetBrains.Annotations;
 
-namespace BigWatsonDotNet.Models.Events
+namespace BigWatsonDotNet.Models
 {
     /// <summary>
     /// A class that represents a standalone aapp event

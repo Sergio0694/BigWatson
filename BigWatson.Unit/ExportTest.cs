@@ -5,7 +5,6 @@ using System.Reflection;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
-using BigWatsonDotNet.Models.Exceptions;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

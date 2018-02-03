@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using BigWatsonDotNet.Models;
-using BigWatsonDotNet.Models.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BigWatsonDotNet.Unit

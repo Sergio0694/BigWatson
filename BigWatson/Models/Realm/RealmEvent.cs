@@ -3,7 +3,7 @@ using BigWatsonDotNet.Enums;
 using Newtonsoft.Json;
 using Realms;
 
-namespace BigWatsonDotNet.Models.Events
+namespace BigWatsonDotNet.Models.Realm
 {
     /// <summary>
     /// A class that represents the app events stored in the database
