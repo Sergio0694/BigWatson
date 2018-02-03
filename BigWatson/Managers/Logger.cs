@@ -258,9 +258,10 @@ namespace BigWatsonDotNet.Managers
                 {
                     if (type == typeof(ExceptionReport))
                     {
-                        RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold).ToArray();
+                        RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                         IList<JObject> jcrashes =
                             (from exception in exceptions
+                             where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
                              orderby exception.Timestamp descending
                              select JObject.FromObject(exception)).ToList();
                         jObj["ExceptionsCount"] = jcrashes.Count;
@@ -268,10 +269,11 @@ namespace BigWatsonDotNet.Managers
                     }
                     else if (type == typeof(Event))
                     {
-                        RealmEvent[] events = realm.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold).ToArray();
+                        RealmEvent[] events = realm.All<RealmEvent>().ToArray();
                         JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                         IList<JObject> jevents =
                             (from log in events
+                             where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
                              orderby log.Timestamp descending
                              select JObject.FromObject(log, converter)).ToList();
                         jObj["EventsCount"] = jevents.Count;

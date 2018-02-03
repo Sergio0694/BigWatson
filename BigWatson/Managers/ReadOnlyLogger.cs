@@ -29,35 +29,28 @@ namespace BigWatsonDotNet.Managers
         #region Crash reports
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(TimeSpan.MaxValue);
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
-        {
-            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
-        }
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
-        {
-            String type = typeof(TException).ToString();
-            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
-        }
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception => LoadExceptionsAsync<TException>(TimeSpan.MaxValue);
 
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
         {
             String type = typeof(TException).ToString();
-            return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type) && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+            return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 
         // Loads and prepares an exceptions collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
+        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold, [NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                RealmExceptionReport[] data = loader(realm).ToArray();
+                RealmExceptionReport[] data = loader(realm).ToArray().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold).ToArray();
 
                 var query =
                     from grouped in
