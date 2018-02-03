@@ -32,10 +32,22 @@ namespace BigWatsonDotNet.Managers
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
         {
             String type = typeof(TException).ToString();
             return LoadExceptionsAsync(r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
+        {
+            throw new NotImplementedException();
         }
 
         // Loads and prepares an exceptions collection from the input data
@@ -85,8 +97,20 @@ namespace BigWatsonDotNet.Managers
         public Task<LogsCollection<Event>> LoadEventsAsync() => LoadEventsAsync(r => r.All<RealmEvent>());
 
         /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync(TimeSpan threshold)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority) 
             => LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, TimeSpan threshold)
+        {
+            throw new NotImplementedException();
+        }
 
         // Loads and prepares an events collection from the input data
         [Pure, ItemNotNull]
