@@ -68,9 +68,6 @@ namespace BigWatsonDotNet.Managers
         }
 
         /// <inheritdoc/>
-        public void Reset() => Realm.DeleteRealm(Configuration);
-
-        /// <inheritdoc/>
         public async Task TrimAsync(TimeSpan threshold)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
@@ -114,6 +111,32 @@ namespace BigWatsonDotNet.Managers
             }
 
             Realm.Compact();
+        }
+
+        /// <inheritdoc/>
+        public async Task ResetAsync()
+        {
+            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            {
+                realm.RemoveRange(realm.All<RealmEvent>());
+                realm.RemoveRange(realm.All<RealmExceptionReport>());
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task ResetAsync<T>() where T : ILog
+        {
+            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            {
+                // Execute the query
+                IQueryable<RealmObject> query;
+                if (typeof(T) == typeof(Event)) query = realm.All<RealmEvent>();
+                else if (typeof(T) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>();
+                else throw new ArgumentException("The input type is not valid", nameof(T));
+
+                // Delete the items
+                realm.RemoveRange(query);
+            }
         }
 
         #endregion

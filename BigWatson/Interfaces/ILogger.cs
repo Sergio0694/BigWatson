@@ -44,7 +44,13 @@ namespace BigWatsonDotNet.Interfaces
         /// Deletes all the existing logs present in the database
         /// </summary>
         [PublicAPI]
-        void Reset();
+        Task ResetAsync();
+
+        /// <summary>
+        /// Deletes all the existing logs of the specified type from the database
+        /// </summary>
+        /// <typeparam name="T">The type of logs to delete</typeparam>
+        Task ResetAsync<T>() where T : ILog;
 
         /// <summary>
         /// Copies the content of the current logs database into a <see cref="Stream"/>

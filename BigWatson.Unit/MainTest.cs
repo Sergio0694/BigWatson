@@ -18,7 +18,7 @@ namespace BigWatsonDotNet.Unit
         public void LogTest()
         {
             // Log
-            BigWatson.Instance.Reset();
+            BigWatson.Instance.ResetAsync().Wait();
             try
             {
                 throw new InvalidOperationException("Hello world!");
@@ -40,7 +40,7 @@ namespace BigWatsonDotNet.Unit
         public void MemoryParserTest()
         {
             // Log
-            BigWatson.Instance.Reset();
+            BigWatson.Instance.ResetAsync().Wait();
             BigWatson.UsedMemoryParser = () => 128L;
             try
             {
@@ -78,7 +78,7 @@ namespace BigWatsonDotNet.Unit
         public void DatabaseExportTest()
         {
             // Log
-            BigWatson.Instance.Reset();
+            BigWatson.Instance.ResetAsync().Wait();
             try
             {
                 throw new InvalidOperationException("Export test");
@@ -103,7 +103,7 @@ namespace BigWatsonDotNet.Unit
         public void JsonExportTest()
         {
             // Log
-            BigWatson.Instance.Reset();
+            BigWatson.Instance.ResetAsync().Wait();
             Exception[] exceptions =
             {
                 new InvalidOperationException("Hello world!"),
