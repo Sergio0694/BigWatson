@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BigWatsonDotNet.Interfaces;
+using BigWatsonDotNet.Models.Abstract;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Models
@@ -10,7 +10,7 @@ namespace BigWatsonDotNet.Models
     /// <summary>
     /// A class that wraps a grouped collection of saved logs
     /// </summary>
-    public sealed class LogsCollection<TLog> : IReadOnlyCollection<IGrouping<VersionInfo, TLog>> where TLog : ILog
+    public sealed class LogsCollection<TLog> : IReadOnlyCollection<IGrouping<VersionInfo, TLog>> where TLog : LogBase
     {
         // Actual data source
         [NotNull, ItemNotNull]

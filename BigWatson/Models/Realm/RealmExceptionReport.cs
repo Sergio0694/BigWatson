@@ -41,27 +41,33 @@ namespace BigWatsonDotNet.Models.Realm
         public String Source { get; set; }
 
         /// <summary>
-        /// Gets the StackTrace for the current Exception
+        /// Gets the demystified stack trace for the current Exception
         /// </summary>
         [JsonProperty(nameof(StackTrace), Order = 5, NullValueHandling = NullValueHandling.Ignore)]
         public String StackTrace { get; set; }
 
         /// <summary>
+        /// Gets the original stack trace for the current Exception
+        /// </summary>
+        [JsonProperty(nameof(NativeStackTrace), Order = 6, NullValueHandling = NullValueHandling.Ignore)]
+        public String NativeStackTrace { get; set; }
+
+        /// <summary>
         /// Gets the crash time for the report
         /// </summary>
-        [JsonProperty(nameof(Timestamp), Order = 6)]
+        [JsonProperty(nameof(Timestamp), Order = 7)]
         public DateTimeOffset Timestamp { get; set; }
 
         /// <summary>
         /// Gets the app version for the report
         /// </summary>
-        [JsonProperty(nameof(AppVersion), Order = 7)]
+        [JsonProperty(nameof(AppVersion), Order = 8)]
         public String AppVersion { get; set; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
         /// </summary>
-        [JsonProperty(nameof(UsedMemory), Order = 8, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(nameof(UsedMemory), Order = 9, DefaultValueHandling = DefaultValueHandling.Ignore)]
         public long UsedMemory { get; set; }
     }
 }

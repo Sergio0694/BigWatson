@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
+using BigWatsonDotNet.Models.Abstract;
 using JetBrains.Annotations;
 
 namespace BigWatsonDotNet.Interfaces
@@ -28,17 +29,17 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Removes all the logs in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
-        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="LogBase.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
         Task TrimAsync(TimeSpan threshold);
 
         /// <summary>
         /// Removes all the logs of the specified type in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
-        /// <typeparam name="T">The type of logs to trim</typeparam>
-        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="ILog.Timestamp"/> property for each entry and the current time</param>
+        /// <typeparam name="TLog">The type of logs to trim</typeparam>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the <see cref="LogBase.Timestamp"/> property for each entry and the current time</param>
         [PublicAPI]
-        Task TrimAsync<T>(TimeSpan threshold) where T : ILog;
+        Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase;
 
         /// <summary>
         /// Deletes all the existing logs present in the database
@@ -49,8 +50,8 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Deletes all the existing logs of the specified type from the database
         /// </summary>
-        /// <typeparam name="T">The type of logs to delete</typeparam>
-        Task ResetAsync<T>() where T : ILog;
+        /// <typeparam name="TLog">The type of logs to delete</typeparam>
+        Task ResetAsync<TLog>() where TLog : LogBase;
 
         /// <summary>
         /// Copies the content of the current logs database into a <see cref="Stream"/>
@@ -74,11 +75,64 @@ namespace BigWatsonDotNet.Interfaces
         Task<String> ExportAsJsonAsync();
 
         /// <summary>
+        /// Exports the content of the current logs database as a JSON string
+        /// </summary>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync(TimeSpan threshold);
+
+        /// <summary>
+        /// Exports the logs of the specified type as a JSON string
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase;
+
+        /// <summary>
+        /// Exports the logs of the specified type as a JSON string
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase;
+
+        /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path
         /// </summary>
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
         [Pure]
         Task ExportAsJsonAsync([NotNull] String path);
+
+        /// <summary>
+        /// Exports the content of the current logs database into a JSON file with the specified path
+        /// </summary>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync([NotNull] String path, TimeSpan threshold);
+
+        /// <summary>
+        /// Exports the logs of the specified type into a JSON file with the specified path
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        /// <param name="path">The path to the target export file</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync<TLog>([NotNull] String path) where TLog : LogBase;
+
+        /// <summary>
+        /// Exports the logs of the specified type into a JSON file with the specified path
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync<TLog>([NotNull] String path, TimeSpan threshold) where TLog : LogBase;
     }
 }

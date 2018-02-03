@@ -85,6 +85,7 @@ The libraries use the following libraries and NuGet packages:
 
 * [Realm.Database](https://www.nuget.org/packages/Realm.Database/)
 * [Newtonsoft.Json](https://www.nuget.org/packages/newtonsoft.json/)
+* [Ben.Demystifier](https://www.nuget.org/packages/Ben.Demystifier/)
 * [JetBrains.Annotations](https://www.nuget.org/packages/JetBrains.Annotations/)
 
 ## Credits
