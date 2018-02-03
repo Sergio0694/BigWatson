@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
@@ -110,6 +111,20 @@ namespace BigWatsonDotNet.Managers
                         new VersionInfo(logs.Length, grouped.Key), logs);
 
                 return new LogsCollection<Event>(query.ToArray());
+            }
+        }
+
+        #endregion
+
+        #region Info
+
+        /// <inheritdoc/>
+        public long Size
+        {
+            get
+            {
+                FileInfo info = new FileInfo(Configuration.DatabasePath);
+                return info.Exists ? info.Length : 0;
             }
         }
 

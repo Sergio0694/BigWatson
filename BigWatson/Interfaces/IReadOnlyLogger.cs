@@ -15,6 +15,11 @@ namespace BigWatsonDotNet.Interfaces
     public interface IReadOnlyLogger : IEquatable<IReadOnlyLogger>
     {
         /// <summary>
+        /// Gets the disk size of the underlying database file, in bytes
+        /// </summary>
+        long Size { get; }
+
+        /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
         /// </summary>
         [PublicAPI]
