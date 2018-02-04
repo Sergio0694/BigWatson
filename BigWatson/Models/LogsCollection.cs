@@ -23,14 +23,12 @@ namespace BigWatsonDotNet.Models
 
         #region Public APIs
 
-        /// <inheritdoc/>
-        public int Count => Source.Count;
-
-        /// <inheritdoc/>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        /// <inheritdoc/>
-        public IEnumerator<IGrouping<VersionInfo, TLog>> GetEnumerator() => Source.GetEnumerator();
+        /// <summary>
+        /// Gets the list of stored logs for the given app <see cref="Version"/>
+        /// </summary>
+        /// <param name="version">The <see cref="Version"/> to use to retrieve saved logs</param>
+        [NotNull, ItemNotNull]
+        public IEnumerable<TLog> this[[NotNull] Version version] => this.FirstOrDefault(group => group.Key.AppVersion.Equals(version)) ?? new TLog[0].AsEnumerable();
 
         private int? _LogsCount;
 
@@ -42,12 +40,27 @@ namespace BigWatsonDotNet.Models
         /// <summary>
         /// Gets a list of all the available logs stored in this instance
         /// </summary>
+        [NotNull, ItemNotNull]
         public IEnumerable<TLog> Logs => Source.SelectMany(g => g);
 
         /// <summary>
         /// Gets the list of all the app versions with at least a single stored log
         /// </summary>
+        [NotNull, ItemNotNull]
         public IEnumerable<Version> AppVersions => Source.Select(g => g.Key.AppVersion);
+
+        #endregion
+
+        #region IReadOnlyCollection
+
+        /// <inheritdoc/>
+        public int Count => Source.Count;
+
+        /// <inheritdoc/>
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <inheritdoc/>
+        public IEnumerator<IGrouping<VersionInfo, TLog>> GetEnumerator() => Source.GetEnumerator();
 
         #endregion
     }

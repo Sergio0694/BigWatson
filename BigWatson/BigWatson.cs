@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Loggers;
@@ -14,6 +15,12 @@ namespace BigWatsonDotNet
     /// </summary>
     public static class BigWatson
     {
+        /// <summary>
+        /// Gets the .realm file extension used by the crash reports databases
+        /// </summary>
+        [NotNull]
+        public const String DatabaseExtension = ".realm";
+
         #region Memory logger
 
         // The default memory parser
@@ -49,12 +56,6 @@ namespace BigWatsonDotNet
         #endregion
 
         /// <summary>
-        /// Gets the .realm file extension used by the crash reports databases
-        /// </summary>
-        [NotNull]
-        public const String DatabaseExtension = ".realm";
-
-        /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
         /// </summary>
         [NotNull]
@@ -70,6 +71,12 @@ namespace BigWatsonDotNet
                 return new RealmConfiguration(path);
             }
         }
+
+        /// <summary>
+        /// Gets the current <see cref="Version"/> instance for the executing app
+        /// </summary>
+        [NotNull]
+        public static Version CurrentAppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version;
 
         [CanBeNull]
         private static ILogger _Instance;

@@ -39,7 +39,7 @@ namespace BigWatsonDotNet.Loggers
                 Message = e.Message,
                 NativeStackTrace = e.StackTrace,
                 StackTrace = e.Demystify().StackTrace,
-                AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
+                AppVersion = BigWatson.CurrentAppVersion.ToString(),
                 UsedMemory = BigWatson.UsedMemoryParser(),
                 Timestamp = DateTimeOffset.Now
             };
