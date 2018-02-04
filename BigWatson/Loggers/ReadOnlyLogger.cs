@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -34,9 +35,11 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>());
 
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
         {
-            throw new NotImplementedException();
+            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(TimeSpan.MaxValue, r => r.All<RealmExceptionReport>().Where(entry => entry.AppVersion == version.ToString()));
+            return groups.Logs.ToArray();
         }
 
         /// <inheritdoc/>
@@ -49,9 +52,12 @@ namespace BigWatsonDotNet.Loggers
             return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
         {
-            throw new NotImplementedException();
+            String type = typeof(TException).ToString();
+            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(TimeSpan.MaxValue, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type) && entry.AppVersion == version.ToString()));
+            return groups.Logs.ToArray();
         }
 
         // Loads and prepares an exceptions collection from the input data
@@ -106,9 +112,11 @@ namespace BigWatsonDotNet.Loggers
             return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
-        public Task<LogsCollection<Event>> LoadEventsAsync(Version version)
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(Version version)
         {
-            throw new NotImplementedException();
+            LogsCollection<Event> groups = await LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.AppVersion == version.ToString()));
+            return groups.Logs.ToArray();
         }
 
         /// <inheritdoc/>
@@ -123,9 +131,11 @@ namespace BigWatsonDotNet.Loggers
             return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
-        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, Version version)
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(EventPriority priority, Version version)
         {
-            throw new NotImplementedException();
+            LogsCollection<Event> groups = await LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && entry.AppVersion == version.ToString()));
+            return groups.Logs.ToArray();
         }
 
         // Loads and prepares an events collection from the input data

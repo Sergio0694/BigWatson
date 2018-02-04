@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Models;
@@ -33,12 +34,12 @@ namespace BigWatsonDotNet.Interfaces
         Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold);
 
         /// <summary>
-        /// Loads the groups with the exceptions for the given app <see cref="Version"/> from the <see cref="Realm"/> instance in use
+        /// Loads the exceptions for the given app <see cref="Version"/> from the <see cref="Realm"/> instance in use
         /// </summary>
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Version version);
+        Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Version version);
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
@@ -67,7 +68,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>([NotNull] Version version) where TException : Exception;
+        Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>([NotNull] Version version) where TException : Exception;
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
@@ -90,7 +91,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Version version);
+        Task<IReadOnlyCollection<Event>> LoadEventsAsync([NotNull] Version version);
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
@@ -119,6 +120,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, [NotNull] Version version);
+        Task<IReadOnlyCollection<Event>> LoadEventsAsync(EventPriority priority, [NotNull] Version version);
     }
 }
