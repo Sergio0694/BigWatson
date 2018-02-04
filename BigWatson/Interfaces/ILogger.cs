@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace BigWatsonDotNet.Interfaces
 {
     /// <summary>
-    /// An interface for an exceptions manager instance with write permission
+    /// An interface for a logger instance with write permission
     /// </summary>
     public interface ILogger : IReadOnlyLogger
     {

@@ -34,6 +34,11 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>());
 
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception => LoadExceptionsAsync<TException>(TimeSpan.MaxValue);
 
@@ -42,6 +47,11 @@ namespace BigWatsonDotNet.Loggers
         {
             String type = typeof(TException).ToString();
             return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
+        }
+
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
+        {
+            throw new NotImplementedException();
         }
 
         // Loads and prepares an exceptions collection from the input data
@@ -96,6 +106,11 @@ namespace BigWatsonDotNet.Loggers
             return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
         }
 
+        public Task<LogsCollection<Event>> LoadEventsAsync(Version version)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
         {
@@ -106,6 +121,11 @@ namespace BigWatsonDotNet.Loggers
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, TimeSpan threshold)
         {
             return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+        }
+
+        public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, Version version)
+        {
+            throw new NotImplementedException();
         }
 
         // Loads and prepares an events collection from the input data
