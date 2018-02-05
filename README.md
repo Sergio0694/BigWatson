@@ -43,13 +43,13 @@ And that's it! The library will now automatically log every exception thrown by 
 It is possible to load the complete list of previous exception reports, sorted by app versions, using:
 
 ```C#
-var reports = await BigWatson.Instance.LoadCrashReportsAsync();
+var reports = await BigWatson.Instance.LoadExceptionsAsync();
 ```
 
 To load only the reports of a specific type, just use the following overload:
 
 ```C#
-var reports = await BigWatson.Instance.LoadCrashReportsAsync<InvalidOperationException>();
+var reports = await BigWatson.Instance.LoadExceptionsAsync<InvalidOperationException>();
 ```
 
 It is also possible to trim the local exceptions database by deleting old reports that are no longer needed:
@@ -72,11 +72,11 @@ If you want to share your crash reports database with someone else, or if you'd 
 
 ```C#
 // Client-side
-await BigWatson.Instance.ExportDatabaseAsync(pathToExportDatabase);
+await BigWatson.Instance.ExportAsync(pathToExportDatabase);
 
 // Developer side
 IReadOnlyLogger logger = BigWatson.Load(pathToDatabase);
-var reports = await logger.LoadCrashReportsAsync();
+var reports = await logger.LoadExceptionsAsync();
 ```
 
 ## Dependencies
