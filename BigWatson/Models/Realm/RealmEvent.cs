@@ -19,7 +19,10 @@ namespace BigWatsonDotNet.Models.Realm
         [PrimaryKey]
         public string Uid { get; set; }
 
-        private byte Level { get; set; }
+        /// <summary>
+        /// Gets the raw <see cref="Priority"/> level value for the current log
+        /// </summary>
+        public byte Level { get; set; }
 
         /// <summary>
         /// Gets the priority associated with the log
