@@ -101,6 +101,12 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
+        public Task TrimAsync(Version version)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
         {
             return Task.Run(() =>
@@ -135,6 +141,12 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
+        public Task TrimAsync<TLog>(Version version) where TLog : LogBase
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task ResetAsync()
         {
             return Task.Run(() =>
@@ -149,6 +161,12 @@ namespace BigWatsonDotNet.Loggers
 
                 Realm.Compact(Configuration);
             });
+        }
+
+        /// <inheritdoc/>
+        public Task ResetAsync(Version version)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
@@ -172,6 +190,12 @@ namespace BigWatsonDotNet.Loggers
 
                 Realm.Compact(Configuration);
             });
+        }
+
+        /// <inheritdoc/>
+        public Task ResetAsync<TLog>(Version version) where TLog : LogBase
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

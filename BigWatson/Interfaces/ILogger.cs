@@ -34,6 +34,13 @@ namespace BigWatsonDotNet.Interfaces
         Task TrimAsync(TimeSpan threshold);
 
         /// <summary>
+        /// Removes all the logs in the databases for app versions older or equal to the input <see cref="Version"/>
+        /// </summary>
+        /// <param name="version">The target <see cref="Version"/> value to use to trim the existing logs</param>
+        [PublicAPI]
+        Task TrimAsync([NotNull] Version version);
+
+        /// <summary>
         /// Removes all the logs of the specified type in the databases older than the input <see cref="TimeSpan"/>
         /// </summary>
         /// <typeparam name="TLog">The type of logs to trim</typeparam>
@@ -42,16 +49,38 @@ namespace BigWatsonDotNet.Interfaces
         Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase;
 
         /// <summary>
+        /// Removes all the logs of the specified type in the databases for app versions older or equal to the input <see cref="Version"/>
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to trim</typeparam>
+        /// <param name="version">The target <see cref="Version"/> value to use to trim the existing logs</param>
+        [PublicAPI]
+        Task TrimAsync<TLog>([NotNull] Version version) where TLog : LogBase;
+
+        /// <summary>
         /// Deletes all the existing logs present in the database
         /// </summary>
         [PublicAPI]
         Task ResetAsync();
 
         /// <summary>
+        /// Deletes all the existing logs present in the database for the specified app <see cref="Version"/>
+        /// </summary>
+        /// <param name="version">The target <see cref="Version"/> to use to delete the saved logs</param>
+        [PublicAPI]
+        Task ResetAsync([NotNull] Version version);
+
+        /// <summary>
         /// Deletes all the existing logs of the specified type from the database
         /// </summary>
         /// <typeparam name="TLog">The type of logs to delete</typeparam>
         Task ResetAsync<TLog>() where TLog : LogBase;
+
+        /// <summary>
+        /// Deletes all the existing logs of the specified type from the database for the specified app <see cref="Version"/>
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to delete</typeparam>
+        /// <param name="version">The target <see cref="Version"/> to use to delete the saved logs</param>
+        Task ResetAsync<TLog>([NotNull] Version version) where TLog : LogBase;
 
         /// <summary>
         /// Copies the content of the current logs database into a <see cref="Stream"/>
