@@ -18,11 +18,11 @@ namespace BigWatsonDotNet.Unit
         /// Gets the path to the local assets folder
         /// </summary>
         [NotNull]
-        public static String LocalPath
+        public static string LocalPath
         {
             get
             {
-                String
+                string
                     code = Assembly.GetExecutingAssembly().Location,
                     dll = Path.GetFullPath(code),
                     root = Path.GetDirectoryName(dll),
@@ -45,7 +45,7 @@ namespace BigWatsonDotNet.Unit
             {
                 BigWatson.Instance.Log(e);
             }
-            String path = Path.Combine(LocalPath, $"test{BigWatson.DatabaseExtension}");
+            string path = Path.Combine(LocalPath, $"test{BigWatson.DatabaseExtension}");
             BigWatson.Instance.ExportAsync(path).Wait();
 
             // Check
@@ -86,7 +86,7 @@ namespace BigWatsonDotNet.Unit
             // Checks
             LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.LogsCount == exceptions.Length);
-            String json = BigWatson.Instance.ExportAsJsonAsync().Result;
+            string json = BigWatson.Instance.ExportAsJsonAsync().Result;
             Assert.IsTrue(json.Length > 0);
             foreach (Exception exception in exceptions)
             {
@@ -124,7 +124,7 @@ namespace BigWatsonDotNet.Unit
             BigWatson.Instance.Log(EventPriority.Warning, "Watch out!");
 
             // Checks
-            String
+            string
                 json1 = BigWatson.Instance.ExportAsJsonAsync<ExceptionReport>().Result,
                 json2 = BigWatson.Instance.ExportAsJsonAsync<Event>().Result;
             foreach (Exception exception in exceptions)

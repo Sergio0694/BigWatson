@@ -26,7 +26,7 @@ namespace BigWatsonDotNet.Loggers
     {
         public Logger([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
-        #region Write APIs
+        #region Log APIs
 
         /// <inheritdoc/>
         public void Log(Exception e)
@@ -39,15 +39,15 @@ namespace BigWatsonDotNet.Loggers
                 Message = e.Message,
                 NativeStackTrace = e.StackTrace,
                 StackTrace = e.Demystify().StackTrace,
-                AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
-                UsedMemory = BigWatson.UsedMemoryParser(),
+                AppVersion = BigWatson.CurrentAppVersion.ToString(),
+                UsedMemory = BigWatson.MemoryParser?.Invoke() ?? Process.GetCurrentProcess().PrivateMemorySize64,
                 Timestamp = DateTimeOffset.Now
             };
             Log(report);
         }
 
         /// <inheritdoc/>
-        public void Log(EventPriority priority, String message)
+        public void Log(EventPriority priority, string message)
         {
             RealmEvent report = new RealmEvent
             {
@@ -78,18 +78,29 @@ namespace BigWatsonDotNet.Loggers
             }
         }
 
+        #endregion
+
+        #region Trim APIs
+
         /// <inheritdoc/>
-        public Task TrimAsync(TimeSpan threshold)
+        public Task TrimAsync(TimeSpan threshold) => TrimAsync(entry => DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold);
+
+        /// <inheritdoc/>
+        public Task TrimAsync(Version version) => TrimAsync(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
+
+        // Trims the logs according to the given filter
+        private Task TrimAsync([NotNull] Predicate<ILog> filter)
         {
             return Task.Run(() =>
             {
                 using (Realm realm = Realm.GetInstance(Configuration))
                 using (Transaction transaction = realm.BeginWrite())
                 {
-                    foreach (RealmExceptionReport old in
-                        from entry in realm.All<RealmExceptionReport>().ToArray()
-                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                        select entry)
+                    foreach (RealmObject old in new IEnumerable<RealmObject>[]
+                    {
+                        realm.All<RealmExceptionReport>().ToArray().Where(log => filter(log)),
+                        realm.All<RealmEvent>().ToArray().Where(log => filter(log))
+                    }.SelectMany(l => l))
                     {
                         realm.Remove(old);
                     }
@@ -101,7 +112,13 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
+        public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase => TrimAsync<TLog>(entry => DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold);
+
+        /// <inheritdoc/>
+        public Task TrimAsync<TLog>(Version version) where TLog : LogBase => TrimAsync<TLog>(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
+
+        // Trims the saved logs according to the input filter
+        private Task TrimAsync<TLog>([NotNull] Predicate<ILog> filter) where TLog : LogBase
         {
             return Task.Run(() =>
             {
@@ -113,12 +130,12 @@ namespace BigWatsonDotNet.Loggers
                     if (typeof(TLog) == typeof(Event))
                         query =
                             from entry in realm.All<RealmEvent>().ToArray()
-                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                            where filter(entry)
                             select entry;
                     else if (typeof(TLog) == typeof(ExceptionReport))
                         query =
                             from entry in realm.All<RealmExceptionReport>().ToArray()
-                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                            where filter(entry)
                             select entry;
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
@@ -133,6 +150,10 @@ namespace BigWatsonDotNet.Loggers
                 Realm.Compact(Configuration);
             });
         }
+
+        #endregion
+
+        #region Reset APIs
 
         /// <inheritdoc/>
         public Task ResetAsync()
@@ -152,6 +173,24 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
+        public Task ResetAsync(Version version)
+        {
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    string _version = version.ToString();
+                    realm.RemoveRange(realm.All<RealmEvent>().Where(entry => entry.AppVersion == _version));
+                    realm.RemoveRange(realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == _version));
+                    transaction.Commit();
+                }
+
+                Realm.Compact(Configuration);
+            });
+        }
+
+        /// <inheritdoc/>
         public Task ResetAsync<TLog>() where TLog : LogBase
         {
             return Task.Run(() =>
@@ -163,6 +202,30 @@ namespace BigWatsonDotNet.Loggers
                     IQueryable<RealmObject> query;
                     if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>();
                     else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>();
+                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
+
+                    // Delete the items
+                    realm.RemoveRange(query);
+                    transaction.Commit();
+                }
+
+                Realm.Compact(Configuration);
+            });
+        }
+
+        /// <inheritdoc/>
+        public Task ResetAsync<TLog>(Version version) where TLog : LogBase
+        {
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    // Execute the query
+                    string _version = version.ToString();
+                    IQueryable<RealmObject> query;
+                    if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>().Where(entry => entry.AppVersion == _version);
+                    else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == _version);
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
                     // Delete the items
@@ -197,7 +260,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task ExportAsync(String path)
+        public Task ExportAsync(string path)
         {
             return Task.Run(() =>
             {
@@ -215,48 +278,68 @@ namespace BigWatsonDotNet.Loggers
         #region JSON export
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(TimeSpan.MaxValue, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(threshold, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(TimeSpan.MaxValue, typeof(TLog));
+        public Task<string> ExportAsJsonAsync(Version version) => ExportAsJsonAsync(entry => entry.AppVersion == version.ToString(), typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(threshold, typeof(TLog));
+        public Task<string> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(null, typeof(TLog));
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync(String path)
+        public Task<string> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(TLog));
+
+        /// <inheritdoc/>
+        public Task<string> ExportAsJsonAsync<TLog>(Version version) where TLog : LogBase => ExportAsJsonAsync(entry => entry.AppVersion == version.ToString(), typeof(TLog));
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync(string path)
         {
-            String json = await ExportAsJsonAsync();
+            string json = await ExportAsJsonAsync();
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync(String path, TimeSpan threshold)
+        public async Task ExportAsJsonAsync(string path, TimeSpan threshold)
         {
-            String json = await ExportAsJsonAsync(threshold);
+            string json = await ExportAsJsonAsync(threshold);
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<TLog>(String path) where TLog : LogBase
+        public async Task ExportAsJsonAsync(string path, Version version)
         {
-            String json = await ExportAsJsonAsync<TLog>();
+            string json = await ExportAsJsonAsync(version);
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<TLog>(String path, TimeSpan threshold) where TLog : LogBase
+        public async Task ExportAsJsonAsync<TLog>(string path) where TLog : LogBase
         {
-            String json = await ExportAsJsonAsync<TLog>(threshold);
+            string json = await ExportAsJsonAsync<TLog>();
+            File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync<TLog>(string path, TimeSpan threshold) where TLog : LogBase
+        {
+            string json = await ExportAsJsonAsync<TLog>(threshold);
+            File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync<TLog>(string path, Version version) where TLog : LogBase
+        {
+            string json = await ExportAsJsonAsync<TLog>(version);
             File.WriteAllText(path, json);
         }
 
         // Writes the requested logs in JSON format
         [Pure, ItemNotNull]
-        private async Task<String> ExportAsJsonAsync(TimeSpan threshold, [NotNull, ItemNotNull] params Type[] types)
+        private async Task<string> ExportAsJsonAsync([CanBeNull] Predicate<ILog> filter, [NotNull, ItemNotNull] params Type[] types)
         {
             // Checks
             if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));
@@ -281,7 +364,7 @@ namespace BigWatsonDotNet.Loggers
                                 RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                                 IList<JObject> jcrashes = (
                                     from exception in exceptions
-                                    where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold
+                                    where filter?.Invoke(exception) ?? true
                                     orderby exception.Timestamp descending
                                     select JObject.FromObject(exception)).ToList();
                                 temp["ExceptionsCount"] = jcrashes.Count;
@@ -293,7 +376,7 @@ namespace BigWatsonDotNet.Loggers
                                 JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                                 IList<JObject> jevents = (
                                     from log in events
-                                    where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
+                                    where filter?.Invoke(log) ?? true
                                     orderby log.Timestamp descending
                                     select JObject.FromObject(log, converter)).ToList();
                                 temp["EventsCount"] = jevents.Count;

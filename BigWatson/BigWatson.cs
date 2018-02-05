@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Reflection;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Loggers;
 using JetBrains.Annotations;
@@ -14,62 +13,66 @@ namespace BigWatsonDotNet
     /// </summary>
     public static class BigWatson
     {
-        #region Memory logger
-
-        // The default memory parser
-        [Pure]
-        private static long DefaultMemoryParser()
-        {
-            try
-            {
-                return Process.GetCurrentProcess().PrivateMemorySize64;
-            }
-            catch (PlatformNotSupportedException)
-            {
-                // Just ignore
-                return 0;
-            }
-        }
-
-        [CanBeNull]
-        private static Func<long> _UsedMemoryParser;
-
-        /// <summary>
-        /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
-        /// This is needed on some platforms (eg. UWP), where the <see cref="Process"/> APIs are not supported.
-        /// </summary>
-        [NotNull]
-        public static Func<long> UsedMemoryParser
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _UsedMemoryParser ?? DefaultMemoryParser;
-            set => _UsedMemoryParser = value;
-        }
-
-        #endregion
-
         /// <summary>
         /// Gets the .realm file extension used by the crash reports databases
         /// </summary>
         [NotNull]
-        public const String DatabaseExtension = ".realm";
+        public const string DatabaseExtension = ".realm";
+
+        #region Folder management
+
+        /// <summary>
+        /// Gets the path for the library working folder
+        /// </summary>
+        [NotNull]
+        private static string WorkingDirectoryPath
+        {
+            get
+            {
+                string
+                    data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    folder = Path.Combine(data, nameof(BigWatson));
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                return folder;
+            }
+        }
+
+        /// <summary>
+        /// Gets the path for the cache files used by the library
+        /// </summary>
+        [NotNull]
+        internal static string CacheDirectoryPath
+        {
+            get
+            {
+                string folder = Path.Combine(WorkingDirectoryPath, "cache");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                return folder;
+            }
+        }
 
         /// <summary>
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
         /// </summary>
         [NotNull]
-        private static RealmConfiguration DefaultConfiguration
-        {
-            get
-            {
-                String
-                    data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    folder = Path.Combine(data, nameof(BigWatson)),
-                    path = Path.Combine(folder, $@"crashreports{DatabaseExtension}");
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-                return new RealmConfiguration(path);
-            }
-        }
+        private static RealmConfiguration DefaultConfiguration => new RealmConfiguration(Path.Combine(WorkingDirectoryPath, $@"crashreports{DatabaseExtension}"));
+
+        #endregion
+
+        #region Public APIs
+
+        /// <summary>
+        /// Gets the current <see cref="Version"/> instance for the executing app
+        /// </summary>
+        [NotNull]
+        public static Version CurrentAppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version;
+
+        /// <summary>
+        /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
+        /// This is needed on some platforms (eg. UWP), where the <see cref="System.Diagnostics.Process"/> APIs are not supported.
+        /// </summary>
+        [CanBeNull]
+        public static Func<long> MemoryParser { get; set; }
 
         [CanBeNull]
         private static ILogger _Instance;
@@ -87,6 +90,25 @@ namespace BigWatsonDotNet
         /// <param name="path">The path to the exported logs database to open</param>
         [PublicAPI]
         [Pure, NotNull]
-        public static IReadOnlyLogger Load([NotNull] String path) => new ReadOnlyLogger(new RealmConfiguration(path));
+        public static IReadOnlyLogger Load([NotNull] string path) => new ReadOnlyLogger(new RealmConfiguration(path));
+
+        /// <summary>
+        /// Gets an <see cref="IReadOnlyLogger"/> instance to access logs from an external database
+        /// </summary>
+        /// <param name="stream">The input <see cref="Stream"/> with the database to read</param>
+        /// <remarks>As a <see cref="Realm"/> database connection can't be created directly from a <see cref="Stream"/>, 
+        /// the contents will be copied to a local temporary file that will be used to load the external logs
+        /// temporary files</remarks>
+        [PublicAPI]
+        [Pure, NotNull]
+        public static IReadOnlyLogger Load([NotNull] Stream stream)
+        {
+            if (!stream.CanRead) throw new ArgumentException("The input stream can't be read from", nameof(stream));
+            String filename = Path.Combine(CacheDirectoryPath, $"{Guid.NewGuid().ToString()}{DatabaseExtension}");
+            using (FileStream file = File.OpenWrite(filename)) stream.CopyTo(file);
+            return Load(filename);
+        }
+
+        #endregion
     }
 }

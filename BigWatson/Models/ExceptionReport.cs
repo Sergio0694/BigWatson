@@ -16,7 +16,7 @@ namespace BigWatsonDotNet.Models
         /// Gets the type of the exception for this crash report
         /// </summary>
         [NotNull]
-        public String ExceptionType { get; }
+        public string ExceptionType { get; }
 
         /// <summary>
         /// Gets the HResult associated to the exception
@@ -27,19 +27,19 @@ namespace BigWatsonDotNet.Models
         /// Gets the message that was generated when the Exception was thrown
         /// </summary>
         [NotNull]
-        public String Message { get; }
+        public string Message { get; }
 
         /// <summary>
         /// Gets the source of the Exception, if present
         /// </summary>
         [NotNull]
-        public String Source { get; }
+        public string Source { get; }
 
         /// <summary>
         /// Gets the StackTrace for the current Exception
         /// </summary>
         [NotNull]
-        public String StackTrace { get; }
+        public string StackTrace { get; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
@@ -81,16 +81,16 @@ namespace BigWatsonDotNet.Models
 
         internal ExceptionReport(
             [NotNull] RealmExceptionReport report,
-            [NotNull] String min, [NotNull] String max, int occurrences,
+            [NotNull] string min, [NotNull] string max, int occurrences,
             DateTimeOffset recent, DateTimeOffset old)
             : base(report.Timestamp.LocalDateTime, Version.Parse(report.AppVersion))
         {
             // Primary
             ExceptionType = report.ExceptionType;
             HResult = report.HResult;
-            Message = report.Message ?? String.Empty;
-            Source = report.Source ?? String.Empty;
-            StackTrace = report.StackTrace ?? String.Empty;
+            Message = report.Message ?? string.Empty;
+            Source = report.Source ?? string.Empty;
+            StackTrace = report.StackTrace ?? string.Empty;
             UsedMemory = report.UsedMemory;
 
             // Secondary

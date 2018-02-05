@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BigWatsonDotNet.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,11 +55,32 @@ namespace BigWatsonDotNet.Unit
         }
 
         [TestMethod]
+        public void LogVersionTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            try
+            {
+                throw new InvalidOperationException("Hello world!");
+            }
+            catch (Exception e)
+            {
+                BigWatson.Instance.Log(e);
+            }
+
+            // Checks
+            IReadOnlyCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync(BigWatson.CurrentAppVersion).Result;
+            Assert.IsTrue(reports.Count == 1);
+            Assert.IsTrue(reports.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
+            Assert.IsTrue(reports.First().Message.Equals("Hello world!"));
+        }
+
+        [TestMethod]
         public void MemoryParserTest()
         {
             // Log
             BigWatson.Instance.ResetAsync().Wait();
-            BigWatson.UsedMemoryParser = () => 128L;
+            BigWatson.MemoryParser = () => 128L;
             try
             {
                 throw new InvalidOperationException();

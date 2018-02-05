@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -29,28 +30,71 @@ namespace BigWatsonDotNet.Loggers
         #region Crash reports
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(TimeSpan.MaxValue);
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>());
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
+        {
+            return LoadExceptionsAsync(r =>
+                from log in r.All<RealmExceptionReport>().ToArray()
+                where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
+                select log);
+        }
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception => LoadExceptionsAsync<TException>(TimeSpan.MaxValue);
+        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
+        {
+            string _version = version.ToString();
+            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(r =>
+                from log in r.All<RealmExceptionReport>()
+                where log.AppVersion == _version
+                select log);
+            return groups.Logs.ToArray();
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
+        {
+            string type = typeof(TException).ToString();
+            return LoadExceptionsAsync(r =>
+                from log in r.All<RealmExceptionReport>()
+                where log.ExceptionType == type
+                select log);
+        }
 
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
         {
-            String type = typeof(TException).ToString();
-            return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
+            string type = typeof(TException).ToString();
+            return LoadExceptionsAsync(r =>
+                from item in (
+                    from log in r.All<RealmExceptionReport>()
+                    where log.ExceptionType == type
+                    select log).ToArray()
+                where DateTimeOffset.Now.Subtract(item.Timestamp) < threshold
+                select item);
+        }
+
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
+        {
+            string
+                type = typeof(TException).ToString(),
+                _version = version.ToString();
+            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(r =>
+                from log in r.All<RealmExceptionReport>()
+                where log.ExceptionType == type && log.AppVersion == _version
+                select log);
+            return groups.Logs.ToArray();
         }
 
         // Loads and prepares an exceptions collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold, [NotNull] Func<Realm, IQueryable<RealmExceptionReport>> loader)
+        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IEnumerable<RealmExceptionReport>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
-                RealmExceptionReport[] data = loader(realm).ToArray().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold).ToArray();
+                RealmExceptionReport[] data = loader(realm).ToArray();
 
                 var query =
                     from grouped in
@@ -93,24 +137,61 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(TimeSpan threshold)
         {
-            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+            return LoadEventsAsync(r =>
+                from log in r.All<RealmEvent>().ToArray()
+                where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
+                select log);
+        }
+
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(Version version)
+        {
+            string _version = version.ToString();
+            LogsCollection<Event> groups = await LoadEventsAsync(r =>
+                from log in r.All<RealmEvent>()
+                where log.AppVersion == _version
+                select log);
+            return groups.Logs.ToArray();
         }
 
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority)
         {
-            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority));
+            byte _priority = (byte)priority;
+            return LoadEventsAsync(r =>
+                from log in r.All<RealmEvent>().ToArray()
+                where log.Level == _priority
+                select log);
         }
 
         /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(EventPriority priority, TimeSpan threshold)
         {
-            return LoadEventsAsync(r => r.All<RealmEvent>().Where(entry => entry.Priority == priority && DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold));
+            byte _priority = (byte)priority;
+            return LoadEventsAsync(r =>
+                from item in (
+                    from log in r.All<RealmEvent>().ToArray()
+                    where log.Level == _priority
+                    select log).ToArray()
+                where DateTimeOffset.Now.Subtract(item.Timestamp) < threshold
+                select item);
+        }
+
+        /// <inheritdoc/>
+        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(EventPriority priority, Version version)
+        {
+            byte _priority = (byte)priority;
+            string _version = version.ToString();
+            LogsCollection<Event> groups = await LoadEventsAsync(r =>
+                from log in r.All<RealmEvent>()
+                where log.Level == _priority && log.AppVersion == _version
+                select log);
+            return groups.Logs.ToArray();
         }
 
         // Loads and prepares an events collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Func<Realm, IQueryable<RealmEvent>> loader)
+        private async Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Func<Realm, IEnumerable<RealmEvent>> loader)
         {
             using (Realm realm = await Realm.GetInstanceAsync(Configuration))
             {
