@@ -111,41 +111,13 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase
-        {
-            return Task.Run(() =>
-            {
-                using (Realm realm = Realm.GetInstance(Configuration))
-                using (Transaction transaction = realm.BeginWrite())
-                {
-                    // Execute the query
-                    IEnumerable<RealmObject> query;
-                    if (typeof(TLog) == typeof(Event))
-                        query =
-                            from entry in realm.All<RealmEvent>().ToArray()
-                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                            select entry;
-                    else if (typeof(TLog) == typeof(ExceptionReport))
-                        query =
-                            from entry in realm.All<RealmExceptionReport>().ToArray()
-                            where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
-                            select entry;
-                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
-
-                    // Trim the database
-                    foreach (RealmObject item in query)
-                    {
-                        realm.Remove(item);
-                    }
-                    transaction.Commit();
-                }
-
-                Realm.Compact(Configuration);
-            });
-        }
+        public Task TrimAsync<TLog>(TimeSpan threshold) where TLog : LogBase => TrimAsync<TLog>(entry => DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold);
 
         /// <inheritdoc/>
-        public Task TrimAsync<TLog>(Version version) where TLog : LogBase
+        public Task TrimAsync<TLog>(Version version) where TLog : LogBase => TrimAsync<TLog>(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
+
+        // Trims the saved logs according to the input filter
+        private Task TrimAsync<TLog>([NotNull] Predicate<ILog> filter) where TLog : LogBase
         {
             return Task.Run(() =>
             {
@@ -157,12 +129,12 @@ namespace BigWatsonDotNet.Loggers
                     if (typeof(TLog) == typeof(Event))
                         query =
                             from entry in realm.All<RealmEvent>().ToArray()
-                            where Version.Parse(entry.AppVersion).CompareTo(version) < 0
+                            where filter(entry)
                             select entry;
                     else if (typeof(TLog) == typeof(ExceptionReport))
                         query =
                             from entry in realm.All<RealmExceptionReport>().ToArray()
-                            where Version.Parse(entry.AppVersion).CompareTo(version) < 0
+                            where filter(entry)
                             select entry;
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using BigWatsonDotNet.Enums;
+using BigWatsonDotNet.Models.Abstract;
 using Newtonsoft.Json;
 using Realms;
 
@@ -9,7 +11,7 @@ namespace BigWatsonDotNet.Models.Realm
     /// A class that represents the app events stored in the database
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    internal sealed class RealmEvent : RealmObject
+    internal sealed class RealmEvent : RealmObject, ILog
     {
         /// <summary>
         /// Gets the key of the current event
@@ -36,16 +38,13 @@ namespace BigWatsonDotNet.Models.Realm
         [JsonProperty(nameof(Message), Order = 2)]
         public string Message { get; set; }
 
-        /// <summary>
-        /// Gets the timestamp for the current log
-        /// </summary>
+        /// <inheritdoc/>
         [JsonProperty(nameof(Timestamp), Order = 3)]
         public DateTimeOffset Timestamp { get; set; }
 
-        /// <summary>
-        /// Gets the app version for the log
-        /// </summary>
+        /// <inheritdoc/>
         [JsonProperty(nameof(AppVersion), Order = 4)]
+        [SuppressMessage("ReSharper", "NotNullMemberIsNotInitialized")]
         public string AppVersion { get; set; }
     }
 }

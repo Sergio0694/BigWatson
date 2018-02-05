@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using BigWatsonDotNet.Models.Abstract;
 using Newtonsoft.Json;
 using Realms;
 
@@ -8,7 +10,7 @@ namespace BigWatsonDotNet.Models.Realm
     /// A class that represents the crash reports stored in the database
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    internal sealed class RealmExceptionReport : RealmObject
+    internal sealed class RealmExceptionReport : RealmObject, ILog
     {
         /// <summary>
         /// Gets the key of the current Exception
@@ -52,16 +54,13 @@ namespace BigWatsonDotNet.Models.Realm
         [JsonProperty(nameof(NativeStackTrace), Order = 6, NullValueHandling = NullValueHandling.Ignore)]
         public string NativeStackTrace { get; set; }
 
-        /// <summary>
-        /// Gets the crash time for the report
-        /// </summary>
+        /// <inheritdoc/>
         [JsonProperty(nameof(Timestamp), Order = 7)]
         public DateTimeOffset Timestamp { get; set; }
 
-        /// <summary>
-        /// Gets the app version for the report
-        /// </summary>
+        /// <inheritdoc/>
         [JsonProperty(nameof(AppVersion), Order = 8)]
+        [SuppressMessage("ReSharper", "NotNullMemberIsNotInitialized")]
         public string AppVersion { get; set; }
 
         /// <summary>
