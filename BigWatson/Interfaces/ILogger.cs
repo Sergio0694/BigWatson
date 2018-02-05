@@ -24,6 +24,7 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         /// <param name="priority">The event priority</param>
         /// <param name="message">The message for the event to log</param>
+        [PublicAPI]
         void Log(EventPriority priority, [NotNull] string message);
 
         /// <summary>
@@ -73,6 +74,7 @@ namespace BigWatsonDotNet.Interfaces
         /// Deletes all the existing logs of the specified type from the database
         /// </summary>
         /// <typeparam name="TLog">The type of logs to delete</typeparam>
+        [PublicAPI]
         Task ResetAsync<TLog>() where TLog : LogBase;
 
         /// <summary>
@@ -80,6 +82,7 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         /// <typeparam name="TLog">The type of logs to delete</typeparam>
         /// <param name="version">The target <see cref="Version"/> to use to delete the saved logs</param>
+        [PublicAPI]
         Task ResetAsync<TLog>([NotNull] Version version) where TLog : LogBase;
 
         /// <summary>
@@ -150,7 +153,6 @@ namespace BigWatsonDotNet.Interfaces
         /// </summary>
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync([NotNull] string path);
 
         /// <summary>
@@ -159,7 +161,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync([NotNull] string path, TimeSpan threshold);
 
         /// <summary>
@@ -168,7 +169,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync([NotNull] string path, [NotNull] Version version);
 
         /// <summary>
@@ -177,7 +177,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <typeparam name="TLog">The type of logs to export</typeparam>
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync<TLog>([NotNull] string path) where TLog : LogBase;
 
         /// <summary>
@@ -187,7 +186,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync<TLog>([NotNull] string path, TimeSpan threshold) where TLog : LogBase;
 
         /// <summary>
@@ -197,7 +195,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
         [PublicAPI]
-        [Pure]
         Task ExportAsJsonAsync<TLog>([NotNull] string path, [NotNull] Version version) where TLog : LogBase;
     }
 }

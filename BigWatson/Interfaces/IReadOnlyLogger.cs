@@ -16,6 +16,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <summary>
         /// Gets the disk size of the underlying database file, in bytes
         /// </summary>
+        [PublicAPI]
         long Size { get; }
 
         /// <summary>

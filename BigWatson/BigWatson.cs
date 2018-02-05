@@ -55,22 +55,47 @@ namespace BigWatsonDotNet
 
         #endregion
 
+        #region Folder management
+
         /// <summary>
-        /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
+        /// Gets the path for the library working folder
         /// </summary>
         [NotNull]
-        private static RealmConfiguration DefaultConfiguration
+        private static string WorkingDirectoryPath
         {
             get
             {
                 string
                     data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    folder = Path.Combine(data, nameof(BigWatson)),
-                    path = Path.Combine(folder, $@"crashreports{DatabaseExtension}");
+                    folder = Path.Combine(data, nameof(BigWatson));
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-                return new RealmConfiguration(path);
+                return folder;
             }
         }
+
+        /// <summary>
+        /// Gets the path for the cache files used by the library
+        /// </summary>
+        [NotNull]
+        internal static string CacheDirectoryPath
+        {
+            get
+            {
+                string folder = Path.Combine(WorkingDirectoryPath, "cache");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                return folder;
+            }
+        }
+
+        /// <summary>
+        /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
+        /// </summary>
+        [NotNull]
+        private static RealmConfiguration DefaultConfiguration => new RealmConfiguration(Path.Combine(WorkingDirectoryPath, $@"crashreports{DatabaseExtension}"));
+
+        #endregion
+
+        #region Public APIs
 
         /// <summary>
         /// Gets the current <see cref="Version"/> instance for the executing app
@@ -95,5 +120,24 @@ namespace BigWatsonDotNet
         [PublicAPI]
         [Pure, NotNull]
         public static IReadOnlyLogger Load([NotNull] string path) => new ReadOnlyLogger(new RealmConfiguration(path));
+
+        /// <summary>
+        /// Gets an <see cref="IReadOnlyLogger"/> instance to access logs from an external database
+        /// </summary>
+        /// <param name="stream">The input <see cref="Stream"/> with the database to read</param>
+        /// <remarks>As a <see cref="Realm"/> database connection can't be created directly from a <see cref="Stream"/>, 
+        /// the contents will be copied to a local temporary file that will be used to load the external logs
+        /// temporary files</remarks>
+        [PublicAPI]
+        [Pure, NotNull]
+        public static IReadOnlyLogger Load([NotNull] Stream stream)
+        {
+            if (!stream.CanRead) throw new ArgumentException("The input stream can't be read from", nameof(stream));
+            String filename = Path.Combine(CacheDirectoryPath, $"{Guid.NewGuid().ToString()}{DatabaseExtension}");
+            using (FileStream file = File.OpenWrite(filename)) stream.CopyTo(file);
+            return Load(filename);
+        }
+
+        #endregion
     }
 }
