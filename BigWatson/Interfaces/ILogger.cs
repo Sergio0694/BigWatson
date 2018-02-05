@@ -112,6 +112,14 @@ namespace BigWatsonDotNet.Interfaces
         Task<String> ExportAsJsonAsync(TimeSpan threshold);
 
         /// <summary>
+        /// Exports the content of the current logs database as a JSON string
+        /// </summary>
+        /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync([NotNull] Version version);
+
+        /// <summary>
         /// Exports the logs of the specified type as a JSON string
         /// </summary>
         /// <typeparam name="TLog">The type of logs to export</typeparam>
@@ -127,6 +135,15 @@ namespace BigWatsonDotNet.Interfaces
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<String> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase;
+
+        /// <summary>
+        /// Exports the logs of the specified type as a JSON string
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<String> ExportAsJsonAsync<TLog>([NotNull] Version version) where TLog : LogBase;
 
         /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path
@@ -146,6 +163,15 @@ namespace BigWatsonDotNet.Interfaces
         Task ExportAsJsonAsync([NotNull] String path, TimeSpan threshold);
 
         /// <summary>
+        /// Exports the content of the current logs database into a JSON file with the specified path
+        /// </summary>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync([NotNull] String path, [NotNull] Version version);
+
+        /// <summary>
         /// Exports the logs of the specified type into a JSON file with the specified path
         /// </summary>
         /// <typeparam name="TLog">The type of logs to export</typeparam>
@@ -163,5 +189,15 @@ namespace BigWatsonDotNet.Interfaces
         [PublicAPI]
         [Pure]
         Task ExportAsJsonAsync<TLog>([NotNull] String path, TimeSpan threshold) where TLog : LogBase;
+
+        /// <summary>
+        /// Exports the logs of the specified type into a JSON file with the specified path
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to export</typeparam>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
+        [PublicAPI]
+        [Pure]
+        Task ExportAsJsonAsync<TLog>([NotNull] String path, [NotNull] Version version) where TLog : LogBase;
     }
 }
