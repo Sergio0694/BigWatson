@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Loggers;
 using JetBrains.Annotations;
@@ -20,40 +18,6 @@ namespace BigWatsonDotNet
         /// </summary>
         [NotNull]
         public const string DatabaseExtension = ".realm";
-
-        #region Memory logger
-
-        // The default memory parser
-        [Pure]
-        private static long DefaultMemoryParser()
-        {
-            try
-            {
-                return Process.GetCurrentProcess().PrivateMemorySize64;
-            }
-            catch (PlatformNotSupportedException)
-            {
-                // Just ignore
-                return 0;
-            }
-        }
-
-        [CanBeNull]
-        private static Func<long> _UsedMemoryParser;
-
-        /// <summary>
-        /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
-        /// This is needed on some platforms (eg. UWP), where the <see cref="Process"/> APIs are not supported.
-        /// </summary>
-        [NotNull]
-        public static Func<long> UsedMemoryParser
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _UsedMemoryParser ?? DefaultMemoryParser;
-            set => _UsedMemoryParser = value;
-        }
-
-        #endregion
 
         #region Folder management
 
@@ -102,6 +66,13 @@ namespace BigWatsonDotNet
         /// </summary>
         [NotNull]
         public static Version CurrentAppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version;
+
+        /// <summary>
+        /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
+        /// This is needed on some platforms (eg. UWP), where the <see cref="System.Diagnostics.Process"/> APIs are not supported.
+        /// </summary>
+        [CanBeNull]
+        public static Func<long> MemoryParser { get; set; }
 
         [CanBeNull]
         private static ILogger _Instance;
