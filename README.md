@@ -38,6 +38,12 @@ this.UnhandledException += (s, e) => BigWatson.Instance.Log(e.Exception);
 
 And that's it! The library will now automatically log every exception thrown by the app and build a complete database with all the crash reports and their useful info, including the app version and the app memory usage.
 
+**NOTE:** on some frameworks, the APIs used by the library to retrieve the amount of used memory are not supported and will cause a crash at runtime. In order to solve this, the `BigWatson` class exposes a `Func<long> MemoryParser` property that can be used to assign an arbitrary method, using the appropriate APIs for the target platform. As an example, on UWP:
+
+```C#
+BigWatson.MemoryParser = () => (long)Windows.System.MemoryManager.AppMemoryUsage;
+```
+
 ### Browse reports
 
 It is possible to load the complete list of previous exception reports, sorted by app versions, using:
