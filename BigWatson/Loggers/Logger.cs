@@ -89,7 +89,7 @@ namespace BigWatsonDotNet.Loggers
         public Task TrimAsync(Version version) => TrimAsync(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
 
         // Trims the logs according to the given filter
-        private Task TrimAsync([NotNull] Predicate<RealmExceptionReport> predicate)
+        private Task TrimAsync([NotNull] Predicate<ILog> filter)
         {
             return Task.Run(() =>
             {
@@ -98,7 +98,7 @@ namespace BigWatsonDotNet.Loggers
                 {
                     foreach (RealmExceptionReport old in
                         from entry in realm.All<RealmExceptionReport>().ToArray()
-                        where predicate(entry)
+                        where filter(entry)
                         select entry)
                     {
                         realm.Remove(old);
@@ -275,25 +275,22 @@ namespace BigWatsonDotNet.Loggers
         #region JSON export
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(threshold, null, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync(Version version) => ExportAsJsonAsync(TimeSpan.MaxValue, entry => entry.Equals(version), typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync(Version version) => ExportAsJsonAsync(entry => entry.AppVersion == version.ToString(), typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(TLog));
+        public Task<string> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(null, typeof(TLog));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(threshold, null, typeof(TLog));
+        public Task<string> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(TLog));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync<TLog>(Version version) where TLog : LogBase
-        {
-            return ExportAsJsonAsync(TimeSpan.MaxValue, entry => entry.Equals(version), typeof(TLog));
-        }
+        public Task<string> ExportAsJsonAsync<TLog>(Version version) where TLog : LogBase => ExportAsJsonAsync(entry => entry.AppVersion == version.ToString(), typeof(TLog));
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync(string path)
@@ -339,7 +336,7 @@ namespace BigWatsonDotNet.Loggers
 
         // Writes the requested logs in JSON format
         [Pure, ItemNotNull]
-        private async Task<string> ExportAsJsonAsync(TimeSpan threshold, [CanBeNull] Predicate<Version> filter, [NotNull, ItemNotNull] params Type[] types)
+        private async Task<string> ExportAsJsonAsync([CanBeNull] Predicate<ILog> filter, [NotNull, ItemNotNull] params Type[] types)
         {
             // Checks
             if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));
@@ -364,8 +361,7 @@ namespace BigWatsonDotNet.Loggers
                                 RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                                 IList<JObject> jcrashes = (
                                     from exception in exceptions
-                                    where DateTimeOffset.Now.Subtract(exception.Timestamp) < threshold &&
-                                          (filter?.Invoke(Version.Parse(exception.AppVersion)) ?? true)
+                                    where filter?.Invoke(exception) ?? true
                                     orderby exception.Timestamp descending
                                     select JObject.FromObject(exception)).ToList();
                                 temp["ExceptionsCount"] = jcrashes.Count;
@@ -377,8 +373,7 @@ namespace BigWatsonDotNet.Loggers
                                 JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                                 IList<JObject> jevents = (
                                     from log in events
-                                    where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold &&
-                                          (filter?.Invoke(Version.Parse(log.AppVersion)) ?? true)
+                                    where filter?.Invoke(log) ?? true
                                     orderby log.Timestamp descending
                                     select JObject.FromObject(log, converter)).ToList();
                                 temp["EventsCount"] = jevents.Count;
