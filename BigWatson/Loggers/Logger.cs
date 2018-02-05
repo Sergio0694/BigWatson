@@ -47,7 +47,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public void Log(EventPriority priority, String message)
+        public void Log(EventPriority priority, string message)
         {
             RealmEvent report = new RealmEvent
             {
@@ -285,7 +285,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task ExportAsync(String path)
+        public Task ExportAsync(string path)
         {
             return Task.Run(() =>
             {
@@ -303,19 +303,19 @@ namespace BigWatsonDotNet.Loggers
         #region JSON export
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync() => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(threshold, null, typeof(ExceptionReport), typeof(Event));
+        public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(threshold, null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
         public Task<string> ExportAsJsonAsync(Version version) => ExportAsJsonAsync(TimeSpan.MaxValue, entry => entry.Equals(version), typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(TLog));
+        public Task<string> ExportAsJsonAsync<TLog>() where TLog : LogBase => ExportAsJsonAsync(TimeSpan.MaxValue, null, typeof(TLog));
 
         /// <inheritdoc/>
-        public Task<String> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(threshold, null, typeof(TLog));
+        public Task<string> ExportAsJsonAsync<TLog>(TimeSpan threshold) where TLog : LogBase => ExportAsJsonAsync(threshold, null, typeof(TLog));
 
         /// <inheritdoc/>
         public Task<string> ExportAsJsonAsync<TLog>(Version version) where TLog : LogBase
@@ -324,50 +324,50 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync(String path)
+        public async Task ExportAsJsonAsync(string path)
         {
-            String json = await ExportAsJsonAsync();
+            string json = await ExportAsJsonAsync();
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync(String path, TimeSpan threshold)
+        public async Task ExportAsJsonAsync(string path, TimeSpan threshold)
         {
-            String json = await ExportAsJsonAsync(threshold);
+            string json = await ExportAsJsonAsync(threshold);
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync(string path, Version version)
         {
-            String json = await ExportAsJsonAsync(version);
+            string json = await ExportAsJsonAsync(version);
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<TLog>(String path) where TLog : LogBase
+        public async Task ExportAsJsonAsync<TLog>(string path) where TLog : LogBase
         {
-            String json = await ExportAsJsonAsync<TLog>();
+            string json = await ExportAsJsonAsync<TLog>();
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
-        public async Task ExportAsJsonAsync<TLog>(String path, TimeSpan threshold) where TLog : LogBase
+        public async Task ExportAsJsonAsync<TLog>(string path, TimeSpan threshold) where TLog : LogBase
         {
-            String json = await ExportAsJsonAsync<TLog>(threshold);
+            string json = await ExportAsJsonAsync<TLog>(threshold);
             File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
         public async Task ExportAsJsonAsync<TLog>(string path, Version version) where TLog : LogBase
         {
-            String json = await ExportAsJsonAsync<TLog>(version);
+            string json = await ExportAsJsonAsync<TLog>(version);
             File.WriteAllText(path, json);
         }
 
         // Writes the requested logs in JSON format
         [Pure, ItemNotNull]
-        private async Task<String> ExportAsJsonAsync(TimeSpan threshold, [CanBeNull] Predicate<Version> filter, [NotNull, ItemNotNull] params Type[] types)
+        private async Task<string> ExportAsJsonAsync(TimeSpan threshold, [CanBeNull] Predicate<Version> filter, [NotNull, ItemNotNull] params Type[] types)
         {
             // Checks
             if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));

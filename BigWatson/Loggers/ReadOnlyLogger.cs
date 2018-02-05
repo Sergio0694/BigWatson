@@ -48,14 +48,14 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
         {
-            String type = typeof(TException).ToString();
+            string type = typeof(TException).ToString();
             return LoadExceptionsAsync(threshold, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type)));
         }
 
         /// <inheritdoc/>
         public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
         {
-            String type = typeof(TException).ToString();
+            string type = typeof(TException).ToString();
             LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(TimeSpan.MaxValue, r => r.All<RealmExceptionReport>().Where(entry => entry.ExceptionType.Equals(type) && entry.AppVersion == version.ToString()));
             return groups.Logs.ToArray();
         }

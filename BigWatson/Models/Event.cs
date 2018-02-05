@@ -20,7 +20,7 @@ namespace BigWatsonDotNet.Models
         /// Gets the log message
         /// </summary>
         [NotNull]
-        public String Message { get; }
+        public string Message { get; }
 
         internal Event([NotNull] RealmEvent log) : base(log.Timestamp.LocalDateTime, Version.Parse(log.AppVersion))
         {

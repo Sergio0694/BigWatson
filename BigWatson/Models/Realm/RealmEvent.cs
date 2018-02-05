@@ -15,7 +15,7 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the key of the current event
         /// </summary>
         [PrimaryKey]
-        public String Uid { get; set; }
+        public string Uid { get; set; }
 
         private byte Level { get; set; }
 
@@ -34,7 +34,7 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the log message
         /// </summary>
         [JsonProperty(nameof(Message), Order = 2)]
-        public String Message { get; set; }
+        public string Message { get; set; }
 
         /// <summary>
         /// Gets the timestamp for the current log
@@ -46,6 +46,6 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the app version for the log
         /// </summary>
         [JsonProperty(nameof(AppVersion), Order = 4)]
-        public String AppVersion { get; set; }
+        public string AppVersion { get; set; }
     }
 }

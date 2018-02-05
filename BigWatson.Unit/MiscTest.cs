@@ -18,7 +18,7 @@ namespace BigWatsonDotNet.Unit
             {
                 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
                 Random random = new Random(Environment.TickCount);
-                var message = new String(Enumerable.Range(0, 500).Select(_ => chars[random.Next() % chars.Length]).ToArray());
+                var message = new string(Enumerable.Range(0, 500).Select(_ => chars[random.Next() % chars.Length]).ToArray());
                 BigWatson.Instance.Log(EventPriority.Debug, message);
             }
             long after = BigWatson.Instance.Size;

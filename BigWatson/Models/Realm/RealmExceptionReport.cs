@@ -14,13 +14,13 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the key of the current Exception
         /// </summary>
         [PrimaryKey]
-        public String Uid { get; set; }
+        public string Uid { get; set; }
 
         /// <summary>
-        /// Gets a String representing the Type of the Exception
+        /// Gets a string representing the Type of the Exception
         /// </summary>
         [JsonProperty(nameof(ExceptionType), Order = 1)]
-        public String ExceptionType { get; set; }
+        public string ExceptionType { get; set; }
 
         /// <summary>
         /// Gets the HResult associated to the Exception
@@ -32,25 +32,25 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the message that was generated when the Exception was thrown
         /// </summary>
         [JsonProperty(nameof(Message), Order = 3, NullValueHandling = NullValueHandling.Ignore)]
-        public String Message { get; set; }
+        public string Message { get; set; }
 
         /// <summary>
         /// Gets the source of the Exception, if present
         /// </summary>
         [JsonProperty(nameof(Source), Order = 4, NullValueHandling = NullValueHandling.Ignore)]
-        public String Source { get; set; }
+        public string Source { get; set; }
 
         /// <summary>
         /// Gets the demystified stack trace for the current Exception
         /// </summary>
         [JsonProperty(nameof(StackTrace), Order = 5, NullValueHandling = NullValueHandling.Ignore)]
-        public String StackTrace { get; set; }
+        public string StackTrace { get; set; }
 
         /// <summary>
         /// Gets the original stack trace for the current Exception
         /// </summary>
         [JsonProperty(nameof(NativeStackTrace), Order = 6, NullValueHandling = NullValueHandling.Ignore)]
-        public String NativeStackTrace { get; set; }
+        public string NativeStackTrace { get; set; }
 
         /// <summary>
         /// Gets the crash time for the report
@@ -62,7 +62,7 @@ namespace BigWatsonDotNet.Models.Realm
         /// Gets the app version for the report
         /// </summary>
         [JsonProperty(nameof(AppVersion), Order = 8)]
-        public String AppVersion { get; set; }
+        public string AppVersion { get; set; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown

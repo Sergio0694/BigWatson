@@ -19,7 +19,7 @@ namespace BigWatsonDotNet
         /// Gets the .realm file extension used by the crash reports databases
         /// </summary>
         [NotNull]
-        public const String DatabaseExtension = ".realm";
+        public const string DatabaseExtension = ".realm";
 
         #region Memory logger
 
@@ -63,7 +63,7 @@ namespace BigWatsonDotNet
         {
             get
             {
-                String
+                string
                     data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     folder = Path.Combine(data, nameof(BigWatson)),
                     path = Path.Combine(folder, $@"crashreports{DatabaseExtension}");
@@ -94,6 +94,6 @@ namespace BigWatsonDotNet
         /// <param name="path">The path to the exported logs database to open</param>
         [PublicAPI]
         [Pure, NotNull]
-        public static IReadOnlyLogger Load([NotNull] String path) => new ReadOnlyLogger(new RealmConfiguration(path));
+        public static IReadOnlyLogger Load([NotNull] string path) => new ReadOnlyLogger(new RealmConfiguration(path));
     }
 }
