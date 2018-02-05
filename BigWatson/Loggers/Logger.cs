@@ -26,7 +26,7 @@ namespace BigWatsonDotNet.Loggers
     {
         public Logger([NotNull] RealmConfiguration configuration) : base(configuration) { }
 
-        #region Write APIs
+        #region Log APIs
 
         /// <inheritdoc/>
         public void Log(Exception e)
@@ -78,8 +78,18 @@ namespace BigWatsonDotNet.Loggers
             }
         }
 
+        #endregion
+
+        #region Trim APIs
+
         /// <inheritdoc/>
-        public Task TrimAsync(TimeSpan threshold)
+        public Task TrimAsync(TimeSpan threshold) => TrimAsync(entry => DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold);
+
+        /// <inheritdoc/>
+        public Task TrimAsync(Version version) => TrimAsync(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
+
+        // Trims the logs according to the given filter
+        private Task TrimAsync([NotNull] Predicate<RealmExceptionReport> predicate)
         {
             return Task.Run(() =>
             {
@@ -88,7 +98,7 @@ namespace BigWatsonDotNet.Loggers
                 {
                     foreach (RealmExceptionReport old in
                         from entry in realm.All<RealmExceptionReport>().ToArray()
-                        where DateTime.Now.Subtract(entry.Timestamp.DateTime) > threshold
+                        where predicate(entry)
                         select entry)
                     {
                         realm.Remove(old);
@@ -98,12 +108,6 @@ namespace BigWatsonDotNet.Loggers
 
                 Realm.Compact(Configuration);
             });
-        }
-
-        /// <inheritdoc/>
-        public Task TrimAsync(Version version)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
@@ -143,8 +147,40 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task TrimAsync<TLog>(Version version) where TLog : LogBase
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    // Execute the query
+                    IEnumerable<RealmObject> query;
+                    if (typeof(TLog) == typeof(Event))
+                        query =
+                            from entry in realm.All<RealmEvent>().ToArray()
+                            where Version.Parse(entry.AppVersion).CompareTo(version) < 0
+                            select entry;
+                    else if (typeof(TLog) == typeof(ExceptionReport))
+                        query =
+                            from entry in realm.All<RealmExceptionReport>().ToArray()
+                            where Version.Parse(entry.AppVersion).CompareTo(version) < 0
+                            select entry;
+                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
+
+                    // Trim the database
+                    foreach (RealmObject item in query)
+                    {
+                        realm.Remove(item);
+                    }
+                    transaction.Commit();
+                }
+
+                Realm.Compact(Configuration);
+            });
         }
+
+        #endregion
+
+        #region Reset APIs
 
         /// <inheritdoc/>
         public Task ResetAsync()
@@ -166,7 +202,18 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task ResetAsync(Version version)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    realm.RemoveRange(realm.All<RealmEvent>().Where(entry => entry.AppVersion == version.ToString()));
+                    realm.RemoveRange(realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == version.ToString()));
+                    transaction.Commit();
+                }
+
+                Realm.Compact(Configuration);
+            });
         }
 
         /// <inheritdoc/>
@@ -195,7 +242,24 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task ResetAsync<TLog>(Version version) where TLog : LogBase
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    // Execute the query
+                    IQueryable<RealmObject> query;
+                    if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>().Where(entry => entry.AppVersion == version.ToString());
+                    else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == version.ToString());
+                    else throw new ArgumentException("The input type is not valid", nameof(TLog));
+
+                    // Delete the items
+                    realm.RemoveRange(query);
+                    transaction.Commit();
+                }
+
+                Realm.Compact(Configuration);
+            });
         }
 
         #endregion
