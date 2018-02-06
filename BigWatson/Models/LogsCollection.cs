@@ -60,13 +60,13 @@ namespace BigWatsonDotNet.Models
         /// <inheritdoc cref="IReadOnlyList{T}"/>
         public int Count => Source.Count;
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="IReadOnlyList{T}"/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="IReadOnlyList{T}"/>
         public IEnumerator<ReadOnlyGroupingList<VersionInfo, TLog>> GetEnumerator() => Source.GetEnumerator();
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="IReadOnlyList{T}"/>
         [NotNull, ItemNotNull]
         public ReadOnlyGroupingList<VersionInfo, TLog> this[int index]
         {
@@ -78,14 +78,14 @@ namespace BigWatsonDotNet.Models
 
         #region ILookup
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
         [NotNull, ItemNotNull]
         public IEnumerable<TLog> this[[NotNull] Version version] => Source.FirstOrDefault(group => group.Key.AppVersion.Equals(version)) ?? new TLog[0].AsEnumerable();
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
         public bool Contains(Version key) => Source.Any(group => group.Key.AppVersion.Equals(key));
 
-        /// <inheritdoc/>
+        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
         IEnumerator<IGrouping<Version, TLog>> IEnumerable<IGrouping<Version, TLog>>.GetEnumerator()
         {
             IEnumerator<IGrouping<Version, TLog>> GetEnumerator()
