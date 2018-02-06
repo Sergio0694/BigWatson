@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BigWatsonDotNet.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -69,7 +70,7 @@ namespace BigWatsonDotNet.Unit
             }
 
             // Checks
-            IReadOnlyCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync(BigWatson.CurrentAppVersion).Result;
+            IReadOnlyCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync(Assembly.GetEntryAssembly().GetName().Version).Result;
             Assert.IsTrue(reports.Count == 1);
             Assert.IsTrue(reports.First().ExceptionType.Equals(typeof(InvalidOperationException).ToString()));
             Assert.IsTrue(reports.First().Message.Equals("Hello world!"));
