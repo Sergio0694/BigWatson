@@ -33,6 +33,21 @@ namespace BigWatsonDotNet.Loggers
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
 
         /// <inheritdoc/>
+        public async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(Predicate<ExceptionReport> predicate)
+        {
+            var query = 
+                from grouped in await LoadExceptionsAsync(r => r.All<RealmExceptionReport>())
+                let items = (
+                    from item in grouped
+                    where predicate(item)
+                    select item).ToArray()
+                select new ReadOnlyGroupingList<VersionInfo, ExceptionReport>(
+                    new VersionInfo(items.Length, grouped.Key.AppVersion), items); 
+
+            return new LogsCollection<ExceptionReport>(query.ToArray());
+        }
+
+        /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
         {
             return LoadExceptionsAsync(r =>
@@ -42,7 +57,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
+        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync(Version version)
         {
             string _version = version.ToString();
             return (await LoadExceptionsAsync(r =>
@@ -75,7 +90,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
+        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
         {
             string
                 type = typeof(TException).ToString(),
@@ -136,6 +151,21 @@ namespace BigWatsonDotNet.Loggers
         public Task<LogsCollection<Event>> LoadEventsAsync() => LoadEventsAsync(r => r.All<RealmEvent>());
 
         /// <inheritdoc/>
+        public async Task<LogsCollection<Event>> LoadEventsAsync(Predicate<Event> predicate)
+        {
+            var query = 
+                from grouped in await LoadEventsAsync(r => r.All<RealmEvent>())
+                let items = (
+                    from item in grouped
+                    where predicate(item)
+                    select item).ToArray()
+                select new ReadOnlyGroupingList<VersionInfo, Event>(
+                    new VersionInfo(items.Length, grouped.Key.AppVersion), items); 
+
+            return new LogsCollection<Event>(query.ToArray());
+        }
+
+        /// <inheritdoc/>
         public Task<LogsCollection<Event>> LoadEventsAsync(TimeSpan threshold)
         {
             return LoadEventsAsync(r =>
@@ -145,7 +175,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(Version version)
+        public async Task<IReadOnlyList<Event>> LoadEventsAsync(Version version)
         {
             string _version = version.ToString();
             return (await LoadEventsAsync(r =>
@@ -178,7 +208,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(EventPriority priority, Version version)
+        public async Task<IReadOnlyList<Event>> LoadEventsAsync(EventPriority priority, Version version)
         {
             byte _priority = (byte)priority;
             string _version = version.ToString();

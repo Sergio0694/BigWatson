@@ -88,8 +88,8 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task TrimAsync(Version version) => TrimAsync(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
 
-        // Trims the logs according to the given filter
-        private Task TrimAsync([NotNull] Predicate<ILog> filter)
+        // Trims the logs according to the given predicate
+        private Task TrimAsync([NotNull] Predicate<ILog> predicate)
         {
             return Task.Run(() =>
             {
@@ -98,8 +98,8 @@ namespace BigWatsonDotNet.Loggers
                 {
                     foreach (RealmObject old in new IEnumerable<RealmObject>[]
                     {
-                        realm.All<RealmExceptionReport>().ToArray().Where(log => filter(log)),
-                        realm.All<RealmEvent>().ToArray().Where(log => filter(log))
+                        realm.All<RealmExceptionReport>().ToArray().Where(log => predicate(log)),
+                        realm.All<RealmEvent>().ToArray().Where(log => predicate(log))
                     }.SelectMany(l => l))
                     {
                         realm.Remove(old);
@@ -117,8 +117,8 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public Task TrimAsync<TLog>(Version version) where TLog : LogBase => TrimAsync<TLog>(entry => Version.Parse(entry.AppVersion).CompareTo(version) < 0);
 
-        // Trims the saved logs according to the input filter
-        private Task TrimAsync<TLog>([NotNull] Predicate<ILog> filter) where TLog : LogBase
+        // Trims the saved logs according to the input predicate
+        private Task TrimAsync<TLog>([NotNull] Predicate<ILog> predicate) where TLog : LogBase
         {
             return Task.Run(() =>
             {
@@ -130,12 +130,12 @@ namespace BigWatsonDotNet.Loggers
                     if (typeof(TLog) == typeof(Event))
                         query =
                             from entry in realm.All<RealmEvent>().ToArray()
-                            where filter(entry)
+                            where predicate(entry)
                             select entry;
                     else if (typeof(TLog) == typeof(ExceptionReport))
                         query =
                             from entry in realm.All<RealmExceptionReport>().ToArray()
-                            where filter(entry)
+                            where predicate(entry)
                             select entry;
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
@@ -339,7 +339,7 @@ namespace BigWatsonDotNet.Loggers
 
         // Writes the requested logs in JSON format
         [Pure, ItemNotNull]
-        private async Task<string> ExportAsJsonAsync([CanBeNull] Predicate<ILog> filter, [NotNull, ItemNotNull] params Type[] types)
+        private async Task<string> ExportAsJsonAsync([CanBeNull] Predicate<ILog> predicate, [NotNull, ItemNotNull] params Type[] types)
         {
             // Checks
             if (types.Length < 1) throw new ArgumentException("The input types list can't be empty", nameof(types));
@@ -364,7 +364,7 @@ namespace BigWatsonDotNet.Loggers
                                 RealmExceptionReport[] exceptions = realm.All<RealmExceptionReport>().ToArray();
                                 IList<JObject> jcrashes = (
                                     from exception in exceptions
-                                    where filter?.Invoke(exception) ?? true
+                                    where predicate?.Invoke(exception) ?? true
                                     orderby exception.Timestamp descending
                                     select JObject.FromObject(exception)).ToList();
                                 temp["ExceptionsCount"] = jcrashes.Count;
@@ -376,7 +376,7 @@ namespace BigWatsonDotNet.Loggers
                                 JsonSerializer converter = JsonSerializer.CreateDefault(new JsonSerializerSettings { Converters = new List<JsonConverter> { new StringEnumConverter() } });
                                 IList<JObject> jevents = (
                                     from log in events
-                                    where filter?.Invoke(log) ?? true
+                                    where predicate?.Invoke(log) ?? true
                                     orderby log.Timestamp descending
                                     select JObject.FromObject(log, converter)).ToList();
                                 temp["EventsCount"] = jevents.Count;

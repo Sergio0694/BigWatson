@@ -27,6 +27,14 @@ namespace BigWatsonDotNet.Interfaces
         Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync();
 
         /// <summary>
+        /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use, according to the input filter
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to filter the saved exceptions</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Predicate<ExceptionReport> predicate);
+
+        /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
         /// </summary>
         /// <param name="threshold">The maximum <see cref="TimeSpan"/> between the timestamp of each entry and the current time</param>
@@ -40,7 +48,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Version version);
+        Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync([NotNull] Version version);
 
         /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
@@ -69,7 +77,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync<TException>([NotNull] Version version) where TException : Exception;
+        Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync<TException>([NotNull] Version version) where TException : Exception;
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
@@ -77,6 +85,14 @@ namespace BigWatsonDotNet.Interfaces
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<LogsCollection<Event>> LoadEventsAsync();
+
+        /// <summary>
+        /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use, according to the input filter
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to filter the saved logs</param>
+        [PublicAPI]
+        [Pure, ItemNotNull]
+        Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Predicate<Event> predicate);
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
@@ -92,7 +108,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<IReadOnlyCollection<Event>> LoadEventsAsync([NotNull] Version version);
+        Task<IReadOnlyList<Event>> LoadEventsAsync([NotNull] Version version);
 
         /// <summary>
         /// Loads the groups with the previous event logs from the <see cref="Realm"/> instance in use
@@ -121,6 +137,6 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target <see cref="Version"/> to use to load saved logs</param>
         [PublicAPI]
         [Pure, ItemNotNull]
-        Task<IReadOnlyCollection<Event>> LoadEventsAsync(EventPriority priority, [NotNull] Version version);
+        Task<IReadOnlyList<Event>> LoadEventsAsync(EventPriority priority, [NotNull] Version version);
     }
 }

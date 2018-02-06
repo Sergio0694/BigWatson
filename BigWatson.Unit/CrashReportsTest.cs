@@ -76,6 +76,35 @@ namespace BigWatsonDotNet.Unit
         }
 
         [TestMethod]
+        public void LogPredicateTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new InvalidOperationException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new InvalidOperationException("We're being too lazy here!"),
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync(entry => entry.ExceptionType.Equals(typeof(InvalidOperationException).ToString())).Result;
+            Assert.IsTrue(reports.LogsCount == 2);
+            Assert.IsTrue(reports[0][1].Message.Equals(exceptions[0].Message));
+        }
+
+        [TestMethod]
         public void MemoryParserTest()
         {
             // Log
