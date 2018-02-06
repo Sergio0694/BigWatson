@@ -12,7 +12,7 @@ namespace BigWatsonDotNet.Models
     /// <summary>
     /// A class that wraps a grouped collection of saved logs
     /// </summary>
-    public sealed class LogsCollection<TLog> : IReadOnlyList<ReadOnlyGroupingList<VersionInfo, TLog>>, ILookup<Version, TLog>
+    public sealed class LogsCollection<TLog> : IReadOnlyList<ReadOnlyGroupingList<VersionInfo, TLog>>
         where TLog : LogBase
     {
         // Actual data source
@@ -25,6 +25,7 @@ namespace BigWatsonDotNet.Models
             LogsCount = source.Sum(g => g.Count);
             Logs = source.SelectMany(g => g).ToArray();
             AppVersions = source.Select(g => g.Key.AppVersion).ToArray();
+            VersionsInfo = source.Select(g => g.Key).ToArray();
         }
 
         #region Public APIs
@@ -47,54 +48,63 @@ namespace BigWatsonDotNet.Models
         public IReadOnlyList<Version> AppVersions { get; }
 
         /// <summary>
+        /// Gets the list of info about each app version with at least a saved log, and the number of logs for that version
+        /// </summary>
+        [NotNull, ItemNotNull]
+        public IReadOnlyList<VersionInfo> VersionsInfo { get; }
+
+        /// <summary>
         /// Returns a list of saved logs according to the input selector
         /// </summary>
         /// <param name="predicate">A <see cref="Predicate{T}"/> used to select the logs to return</param>
         [NotNull, ItemNotNull]
         public IReadOnlyList<TLog> this[[NotNull] Predicate<TLog> predicate] => Logs.Where(log => predicate(log)).ToArray();
 
+        /// <summary>
+        /// Returns a list of saved logs for the input app <see cref="Version"/>
+        /// </summary>
+        /// <param name="version">The app <see cref="Version"/> for the logs to return</param>
+        [NotNull, ItemNotNull]
+        public IReadOnlyList<TLog> this[[NotNull] Version version]
+        {
+            get
+            {
+                if (Source.FirstOrDefault(group => group.Key.AppVersion.Equals(version)) is var result && result != null)
+                {
+                    return result;
+                }
+                return new TLog[0];
+            }
+        }
+
+        /// <summary>
+        /// Returns an <see cref="IReadOnlyDictionary{TKey,TValue}"/> with the logs stored in the current instance and their relative app <see cref="Version"/>
+        /// </summary>
+        [Pure, NotNull]
+        public IReadOnlyDictionary<Version, IReadOnlyList<TLog>> ToDictionary()
+        {
+            return Source.ToDictionary<ReadOnlyGroupingList<VersionInfo, TLog>, Version, IReadOnlyList<TLog>>(group => group.Key.AppVersion, group => group);
+        }
+
         #endregion
 
         #region IReadOnlyList
 
-        /// <inheritdoc cref="IReadOnlyList{T}"/>
+        /// <inheritdoc/>
         public int Count => Source.Count;
 
-        /// <inheritdoc cref="IReadOnlyList{T}"/>
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        /// <inheritdoc cref="IReadOnlyList{T}"/>
+        /// <inheritdoc/>
         public IEnumerator<ReadOnlyGroupingList<VersionInfo, TLog>> GetEnumerator() => Source.GetEnumerator();
 
-        /// <inheritdoc cref="IReadOnlyList{T}"/>
+        /// <inheritdoc/>
         [NotNull, ItemNotNull]
         public ReadOnlyGroupingList<VersionInfo, TLog> this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Source[index];
-        }
-
-        #endregion
-
-        #region ILookup
-
-        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
-        [NotNull, ItemNotNull]
-        public IEnumerable<TLog> this[[NotNull] Version version] => Source.FirstOrDefault(group => group.Key.AppVersion.Equals(version)) ?? new TLog[0].AsEnumerable();
-
-        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
-        public bool Contains(Version key) => Source.Any(group => group.Key.AppVersion.Equals(key));
-
-        /// <inheritdoc cref="ILookup{TKey,TElement}"/>
-        IEnumerator<IGrouping<Version, TLog>> IEnumerable<IGrouping<Version, TLog>>.GetEnumerator()
-        {
-            IEnumerator<IGrouping<Version, TLog>> GetEnumerator()
-            {
-                foreach (ReadOnlyGroupingList<VersionInfo, TLog> group in Source)
-                    yield return new ReadOnlyGroupingList<Version, TLog>(group.Key.AppVersion, group);
-            }
-
-            return GetEnumerator();
         }
 
         #endregion
