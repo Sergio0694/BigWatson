@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Loggers;
 using JetBrains.Annotations;
@@ -62,17 +61,19 @@ namespace BigWatsonDotNet
         #region Public APIs
 
         /// <summary>
-        /// Gets the current <see cref="Version"/> instance for the executing app
-        /// </summary>
-        [NotNull]
-        public static Version CurrentAppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version;
-
-        /// <summary>
         /// Gets or sets a <see cref="Func{TResult}"/> <see langword="delegate"/> that checks the current memory used by the process.
         /// This is needed on some platforms (eg. UWP), where the <see cref="System.Diagnostics.Process"/> APIs are not supported.
         /// </summary>
         [CanBeNull]
         public static Func<long> MemoryParser { get; set; }
+
+        /// <summary>
+        /// Gets or sets a user-defined <see cref="Func{TResult}"/> <see langword="delegate"/> that gets the current app <see cref="Version"/>.
+        /// It can be used to override the default method used by the library, in cases where the current assembly version doesn't reflect the
+        /// actual version of the app or process using the library (eg. on UWP, where the app version doesn't always match the assembly version).
+        /// </summary>
+        [CanBeNull]
+        public static Func<Version> VersionParser { get; set; }
 
         [CanBeNull]
         private static ILogger _Instance;
