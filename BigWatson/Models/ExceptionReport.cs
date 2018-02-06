@@ -36,10 +36,16 @@ namespace BigWatsonDotNet.Models
         public string Source { get; }
 
         /// <summary>
-        /// Gets the StackTrace for the current Exception
+        /// Gets the enhanced staack trace for the current crash report
         /// </summary>
         [NotNull]
         public string StackTrace { get; }
+
+        /// <summary>
+        /// Gets the original stack trace for the current crash report
+        /// </summary>
+        [NotNull]
+        public string NativeStackTrace { get; }
 
         /// <summary>
         /// Gets the amount of memory that the app was using when the Exception was thrown
@@ -91,6 +97,7 @@ namespace BigWatsonDotNet.Models
             Message = report.Message ?? string.Empty;
             Source = report.Source ?? string.Empty;
             StackTrace = report.StackTrace ?? string.Empty;
+            NativeStackTrace = report.NativeStackTrace ?? string.Empty;
             UsedMemory = report.UsedMemory;
 
             // Secondary

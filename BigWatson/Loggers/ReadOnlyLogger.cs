@@ -41,8 +41,7 @@ namespace BigWatsonDotNet.Loggers
                     from item in grouped
                     where predicate(item)
                     select item).ToArray()
-                select new ReadOnlyGroupingList<VersionInfo, ExceptionReport>(
-                    new VersionInfo(items.Length, grouped.Key.AppVersion), items); 
+                select new ReadOnlyGroupingList<Version, ExceptionReport>(grouped.Key, items); 
 
             return new LogsCollection<ExceptionReport>(query.ToArray());
         }
@@ -135,8 +134,7 @@ namespace BigWatsonDotNet.Loggers
                             orderby header.Key descending
                             select header
                         let crashes = grouped.ToArray()
-                        select new ReadOnlyGroupingList<VersionInfo, ExceptionReport>(
-                            new VersionInfo(crashes.Length, grouped.Key), crashes);
+                        select new ReadOnlyGroupingList<Version, ExceptionReport>(grouped.Key, crashes);
 
                     return new LogsCollection<ExceptionReport>(query.ToArray());
                 }
@@ -159,8 +157,7 @@ namespace BigWatsonDotNet.Loggers
                     from item in grouped
                     where predicate(item)
                     select item).ToArray()
-                select new ReadOnlyGroupingList<VersionInfo, Event>(
-                    new VersionInfo(items.Length, grouped.Key.AppVersion), items); 
+                select new ReadOnlyGroupingList<Version, Event>(grouped.Key, items); 
 
             return new LogsCollection<Event>(query.ToArray());
         }
@@ -239,8 +236,7 @@ namespace BigWatsonDotNet.Loggers
                             orderby header.Key descending
                             select header
                         let logs = grouped.ToArray()
-                        select new ReadOnlyGroupingList<VersionInfo, Event>(
-                            new VersionInfo(logs.Length, grouped.Key), logs);
+                        select new ReadOnlyGroupingList<Version, Event>(grouped.Key, logs);
 
                     return new LogsCollection<Event>(query.ToArray());
                 }

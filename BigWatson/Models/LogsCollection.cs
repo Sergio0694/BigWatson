@@ -12,23 +12,22 @@ namespace BigWatsonDotNet.Models
     /// <summary>
     /// A class that wraps a grouped collection of saved logs
     /// </summary>
-    public sealed class LogsCollection<TLog> : IReadOnlyList<ReadOnlyGroupingList<VersionInfo, TLog>>
+    public sealed class LogsCollection<TLog> : IReadOnlyList<ReadOnlyGroupingList<Version, TLog>>
         where TLog : LogBase
     {
         // Actual data source
         [NotNull, ItemNotNull]
-        private readonly IReadOnlyList<ReadOnlyGroupingList<VersionInfo, TLog>> Source;
+        private readonly IReadOnlyList<ReadOnlyGroupingList<Version, TLog>> Source;
         
-        internal LogsCollection([NotNull, ItemNotNull] IReadOnlyList<ReadOnlyGroupingList<VersionInfo, TLog>> source)
+        internal LogsCollection([NotNull, ItemNotNull] IReadOnlyList<ReadOnlyGroupingList<Version, TLog>> source)
         {
             Source = source;
             LogsCount = source.Sum(g => g.Count);
             Logs = source.SelectMany(g => g).ToArray();
-            AppVersions = source.Select(g => g.Key.AppVersion).ToArray();
-            VersionsInfo = source.Select(g => g.Key).ToArray();
+            AppVersions = source.Select(g => g.Key).ToArray();
         }
 
-        #region Public APIs
+        #region APIs
 
         /// <summary>
         /// Gets the total number of logs stored in this instance
@@ -48,12 +47,6 @@ namespace BigWatsonDotNet.Models
         public IReadOnlyList<Version> AppVersions { get; }
 
         /// <summary>
-        /// Gets the list of info about each app version with at least a saved log, and the number of logs for that version
-        /// </summary>
-        [NotNull, ItemNotNull]
-        public IReadOnlyList<VersionInfo> VersionsInfo { get; }
-
-        /// <summary>
         /// Returns a list of saved logs according to the input selector
         /// </summary>
         /// <param name="predicate">A <see cref="Predicate{T}"/> used to select the logs to return</param>
@@ -69,7 +62,7 @@ namespace BigWatsonDotNet.Models
         {
             get
             {
-                if (Source.FirstOrDefault(group => group.Key.AppVersion.Equals(version)) is var result && result != null)
+                if (Source.FirstOrDefault(group => group.Key.Equals(version)) is var result && result != null)
                 {
                     return result;
                 }
@@ -83,7 +76,7 @@ namespace BigWatsonDotNet.Models
         [Pure, NotNull]
         public IReadOnlyDictionary<Version, IReadOnlyList<TLog>> ToDictionary()
         {
-            return Source.ToDictionary<ReadOnlyGroupingList<VersionInfo, TLog>, Version, IReadOnlyList<TLog>>(group => group.Key.AppVersion, group => group);
+            return Source.ToDictionary<ReadOnlyGroupingList<Version, TLog>, Version, IReadOnlyList<TLog>>(group => group.Key, group => group);
         }
 
         #endregion
@@ -97,11 +90,11 @@ namespace BigWatsonDotNet.Models
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc/>
-        public IEnumerator<ReadOnlyGroupingList<VersionInfo, TLog>> GetEnumerator() => Source.GetEnumerator();
+        public IEnumerator<ReadOnlyGroupingList<Version, TLog>> GetEnumerator() => Source.GetEnumerator();
 
         /// <inheritdoc/>
         [NotNull, ItemNotNull]
-        public ReadOnlyGroupingList<VersionInfo, TLog> this[int index]
+        public ReadOnlyGroupingList<Version, TLog> this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Source[index];
