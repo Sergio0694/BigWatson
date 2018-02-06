@@ -6,11 +6,11 @@ using JetBrains.Annotations;
 namespace BigWatsonDotNet.Models.Misc
 {
     /// <summary>
-    /// A class that represents a single group of data to display to the end user
+    /// A class that represents a group of items with shared key
     /// </summary>
     /// <typeparam name="TKey">The type of the group key</typeparam>
     /// <typeparam name="TValue">The type of the items in the group</typeparam>
-    internal sealed class GroupedList<TKey, TValue> : IReadOnlyList<TValue>, IGrouping<TKey, TValue> 
+    public sealed class ReadOnlyGroupingList<TKey, TValue> : IReadOnlyList<TValue>, IGrouping<TKey, TValue>
         where TKey : class 
         where TValue : class
     {
@@ -22,7 +22,7 @@ namespace BigWatsonDotNet.Models.Misc
         [NotNull, ItemNotNull]
         private readonly IReadOnlyList<TValue> Items;
 
-        public GroupedList([NotNull] TKey key, [CanBeNull, ItemNotNull] IReadOnlyList<TValue> items)
+        internal ReadOnlyGroupingList([NotNull] TKey key, [CanBeNull, ItemNotNull] IReadOnlyList<TValue> items)
         {
             Key = key;
             Items = items ?? new TValue[0];

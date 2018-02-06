@@ -45,11 +45,10 @@ namespace BigWatsonDotNet.Loggers
         public async Task<IReadOnlyCollection<ExceptionReport>> LoadExceptionsAsync(Version version)
         {
             string _version = version.ToString();
-            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(r =>
+            return (await LoadExceptionsAsync(r =>
                 from log in r.All<RealmExceptionReport>()
                 where log.AppVersion == _version
-                select log);
-            return groups.Logs.ToArray();
+                select log)).Logs;
         }
 
         /// <inheritdoc/>
@@ -81,50 +80,52 @@ namespace BigWatsonDotNet.Loggers
             string
                 type = typeof(TException).ToString(),
                 _version = version.ToString();
-            LogsCollection<ExceptionReport> groups = await LoadExceptionsAsync(r =>
+            return (await LoadExceptionsAsync(r =>
                 from log in r.All<RealmExceptionReport>()
                 where log.ExceptionType == type && log.AppVersion == _version
-                select log);
-            return groups.Logs.ToArray();
+                select log)).Logs;
         }
 
         // Loads and prepares an exceptions collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IEnumerable<RealmExceptionReport>> loader)
+        private Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IEnumerable<RealmExceptionReport>> loader)
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                RealmExceptionReport[] data = loader(realm).ToArray();
+                using (Realm realm = Realm.GetInstance(Configuration))
+                {
+                    RealmExceptionReport[] data = loader(realm).ToArray();
 
-                var query =
-                    from grouped in
-                        from exception in
-                            from raw in data
-                            let sameType = (
-                                from item in data
-                                where item.ExceptionType.Equals(raw.ExceptionType)
-                                orderby item.Timestamp descending
-                                select item).ToArray()
-                            let versions = (
-                                from entry in sameType
-                                group entry by entry.AppVersion
-                                into version
-                                orderby version.Key
-                                select version.Key).ToArray()
-                            select new ExceptionReport(raw,
-                                versions[0], versions[versions.Length - 1], sameType.Length,
-                                sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
-                        orderby exception.Timestamp descending
-                        group exception by exception.AppVersion
-                        into header
-                        orderby header.Key descending
-                        select header
-                    let crashes = grouped.ToArray()
-                    select new GroupedList<VersionInfo, ExceptionReport>(
-                        new VersionInfo(crashes.Length, grouped.Key), crashes);
+                    var query =
+                        from grouped in
+                            from exception in
+                                from raw in data
+                                let sameType = (
+                                    from item in data
+                                    where item.ExceptionType.Equals(raw.ExceptionType)
+                                    orderby item.Timestamp descending
+                                    select item).ToArray()
+                                let versions = (
+                                    from entry in sameType
+                                    group entry by entry.AppVersion
+                                    into version
+                                    orderby version.Key
+                                    select version.Key).ToArray()
+                                select new ExceptionReport(raw,
+                                    versions[0], versions[versions.Length - 1], sameType.Length,
+                                    sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                            orderby exception.Timestamp descending
+                            group exception by exception.AppVersion
+                            into header
+                            orderby header.Key descending
+                            select header
+                        let crashes = grouped.ToArray()
+                        select new ReadOnlyGroupingList<VersionInfo, ExceptionReport>(
+                            new VersionInfo(crashes.Length, grouped.Key), crashes);
 
-                return new LogsCollection<ExceptionReport>(query.ToArray());
-            }
+                    return new LogsCollection<ExceptionReport>(query.ToArray());
+                }
+            });
         }
 
         #endregion
@@ -147,11 +148,10 @@ namespace BigWatsonDotNet.Loggers
         public async Task<IReadOnlyCollection<Event>> LoadEventsAsync(Version version)
         {
             string _version = version.ToString();
-            LogsCollection<Event> groups = await LoadEventsAsync(r =>
+            return (await LoadEventsAsync(r =>
                 from log in r.All<RealmEvent>()
                 where log.AppVersion == _version
-                select log);
-            return groups.Logs.ToArray();
+                select log)).Logs;
         }
 
         /// <inheritdoc/>
@@ -182,37 +182,39 @@ namespace BigWatsonDotNet.Loggers
         {
             byte _priority = (byte)priority;
             string _version = version.ToString();
-            LogsCollection<Event> groups = await LoadEventsAsync(r =>
+            return (await LoadEventsAsync(r =>
                 from log in r.All<RealmEvent>()
                 where log.Level == _priority && log.AppVersion == _version
-                select log);
-            return groups.Logs.ToArray();
+                select log)).Logs;
         }
 
         // Loads and prepares an events collection from the input data
         [Pure, ItemNotNull]
-        private async Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Func<Realm, IEnumerable<RealmEvent>> loader)
+        private Task<LogsCollection<Event>> LoadEventsAsync([NotNull] Func<Realm, IEnumerable<RealmEvent>> loader)
         {
-            using (Realm realm = await Realm.GetInstanceAsync(Configuration))
+            return Task.Run(() =>
             {
-                RealmEvent[] data = loader(realm).ToArray();
+                using (Realm realm = Realm.GetInstance(Configuration))
+                {
+                    RealmEvent[] data = loader(realm).ToArray();
 
-                var query =
-                    from grouped in
-                        from item in
-                            from raw in data
-                            select new Event(raw)
-                        orderby item.Timestamp descending
-                        group item by item.AppVersion
-                        into header
-                        orderby header.Key descending
-                        select header
-                    let logs = grouped.ToArray()
-                    select new GroupedList<VersionInfo, Event>(
-                        new VersionInfo(logs.Length, grouped.Key), logs);
+                    var query =
+                        from grouped in
+                            from item in
+                                from raw in data
+                                select new Event(raw)
+                            orderby item.Timestamp descending
+                            group item by item.AppVersion
+                            into header
+                            orderby header.Key descending
+                            select header
+                        let logs = grouped.ToArray()
+                        select new ReadOnlyGroupingList<VersionInfo, Event>(
+                            new VersionInfo(logs.Length, grouped.Key), logs);
 
-                return new LogsCollection<Event>(query.ToArray());
-            }
+                    return new LogsCollection<Event>(query.ToArray());
+                }
+            });
         }
 
         #endregion
