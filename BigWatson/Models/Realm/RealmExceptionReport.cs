@@ -13,12 +13,6 @@ namespace BigWatsonDotNet.Models.Realm
     internal sealed class RealmExceptionReport : RealmObject, ILog
     {
         /// <summary>
-        /// Gets the key of the current Exception
-        /// </summary>
-        [PrimaryKey]
-        public string Uid { get; set; }
-
-        /// <summary>
         /// Gets a string representing the Type of the Exception
         /// </summary>
         [JsonProperty(nameof(ExceptionType), Order = 1)]

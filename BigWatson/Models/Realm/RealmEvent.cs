@@ -14,12 +14,6 @@ namespace BigWatsonDotNet.Models.Realm
     internal sealed class RealmEvent : RealmObject, ILog
     {
         /// <summary>
-        /// Gets the key of the current event
-        /// </summary>
-        [PrimaryKey]
-        public string Uid { get; set; }
-
-        /// <summary>
         /// Gets the raw <see cref="Priority"/> level value for the current log
         /// </summary>
         public byte Level { get; set; }

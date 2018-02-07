@@ -33,7 +33,6 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmExceptionReport report = new RealmExceptionReport
             {
-                Uid = Guid.NewGuid().ToString(),
                 ExceptionType = e.GetType().ToString(),
                 HResult = e.HResult,
                 Message = e.Message,
@@ -52,7 +51,6 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmEvent report = new RealmEvent
             {
-                Uid = Guid.NewGuid().ToString(),
                 Priority = priority,
                 Message = message,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
