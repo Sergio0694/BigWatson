@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Models.Abstract;
@@ -196,5 +197,43 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
         [PublicAPI]
         Task ExportAsJsonAsync<TLog>([NotNull] string path, [NotNull] Version version) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="LogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="LogUploader{TLog}"/> function to use to upload the logs of the input type</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushLogsAsync<TLog>([NotNull] LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="CancellableLogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="CancellableLogUploader{TLog}"/> function to use to upload the logs</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushLogsAsync<TLog>([NotNull] CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
     }
+
+    /// <summary>
+    /// A <see langword="delegate"/> that uploads a log to a remote location
+    /// </summary>
+    /// <typeparam name="TLog">The type of log to upload</typeparam>
+    /// <param name="log">The current log to upload</param>
+    /// <returns><see langword="true"/> if the upload was completed successfully, <see langword="false"/> otherwise</returns>
+    public delegate Task<bool> LogUploader<in TLog>(TLog log) where TLog : LogBase;
+
+    /// <summary>
+    /// A <see langword="delegate"/> that uploads a log to a remote location
+    /// </summary>
+    /// <typeparam name="TLog">The type of log to upload</typeparam>
+    /// <param name="log">The current log to upload</param>
+    /// <param name="token">A <see cref="CancellationToken"/> for the upload operation</param>
+    /// <returns><see langword="true"/> if the upload was completed successfully, <see langword="false"/> otherwise</returns>
+    public delegate Task<bool> CancellableLogUploader<in TLog>(TLog log, CancellationToken token) where TLog : LogBase;
 }

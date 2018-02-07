@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
@@ -394,6 +395,90 @@ namespace BigWatsonDotNet.Loggers
                 // Return the JSON
                 byte[] bytes = stream.ToArray();
                 return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
+        #endregion
+
+        #region Flush
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushLogsAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushLogsAsync<TLog>((log, _) => uploader(log), token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public async Task<int> TryFlushLogsAsync<TLog>(CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+        {
+            using (Realm realm = Realm.GetInstance(Configuration))
+            {
+                IEnumerable<(RealmObject Raw, TLog Log)> query;
+                if (typeof(TLog) == typeof(ExceptionReport))
+                {
+                    RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
+
+                    query = 
+                        from raw in data
+                        let sameType = (
+                            from item in data
+                            where item.ExceptionType.Equals(raw.ExceptionType)
+                            select item).ToArray()
+                        let versions = (
+                            from entry in sameType
+                            group entry by entry.AppVersion
+                            into version
+                            select version.Key).ToArray()
+                        let item = new ExceptionReport(raw,
+                            versions[0], versions[versions.Length - 1], sameType.Length,
+                            sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                        select ((RealmObject)raw, (TLog)(object)item);
+                }
+                else if (typeof(TLog) == typeof(ExceptionReport))
+                {
+                    RealmEvent[] data = realm.All<RealmEvent>().ToArray();
+
+                    query =
+                        from raw in data
+                        let item = new Event(raw)
+                        select ((RealmObject)raw, (TLog)(object)item);
+                }
+                else throw new ArgumentException("The input type is not valid", nameof(TLog));
+
+                // Flush the items
+                int flushed = 0;
+                switch (mode)
+                {
+                    case FlushMode.Serial:
+                        using (Transaction transaction = realm.BeginWrite())
+                        {
+                            foreach ((RealmObject raw, TLog log) in query)
+                            {
+                                if (token.IsCancellationRequested) break;
+                                if (await uploader(log, token))
+                                {
+                                    realm.Remove(raw);
+                                    flushed++;
+                                }
+                            }
+                            transaction.Commit();
+                            return flushed;
+                        }
+                    case FlushMode.Parallel:
+                        (RealmObject Raw, TLog Log)[] array = query.AsParallel().ToArray();
+                        if (token.IsCancellationRequested) return 0;
+                        bool[] results = await Task.WhenAll(array.Select(pair => uploader(pair.Log, token)));
+                        using (Transaction transaction = realm.BeginWrite())
+                        {
+                            for (int i = 0; i < array.Length; i++)
+                                if (results[i])
+                                {
+                                    realm.Remove(array[i].Raw);
+                                    flushed++;
+                                }
+                            transaction.Commit();
+                            return flushed;
+                        }
+                    default: throw new ArgumentException("The input flush mode is not valid", nameof(mode));
+                }
             }
         }
 
