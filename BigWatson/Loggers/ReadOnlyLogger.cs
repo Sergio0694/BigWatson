@@ -30,85 +30,14 @@ namespace BigWatsonDotNet.Loggers
         #region Crash reports
 
         /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync() => LoadExceptionsAsync(r => r.All<RealmExceptionReport>());
-
-        /// <inheritdoc/>
-        public async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(Predicate<ExceptionReport> predicate)
-        {
-            var query = 
-                from grouped in await LoadExceptionsAsync(r => r.All<RealmExceptionReport>())
-                let items = (
-                    from item in grouped
-                    where predicate(item)
-                    select item).ToArray()
-                select new ReadOnlyGroupingList<Version, ExceptionReport>(grouped.Key, items); 
-
-            return new LogsCollection<ExceptionReport>(query.ToArray());
-        }
-
-        /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold)
-        {
-            return LoadExceptionsAsync(r =>
-                from log in r.All<RealmExceptionReport>().ToArray()
-                where DateTimeOffset.Now.Subtract(log.Timestamp) < threshold
-                select log);
-        }
-
-        /// <inheritdoc/>
-        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync(Version version)
-        {
-            string _version = version.ToString();
-            return (await LoadExceptionsAsync(r =>
-                from log in r.All<RealmExceptionReport>()
-                where log.AppVersion == _version
-                select log)).Logs;
-        }
-
-        /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
-        {
-            string type = typeof(TException).ToString();
-            return LoadExceptionsAsync(r =>
-                from log in r.All<RealmExceptionReport>()
-                where log.ExceptionType == type
-                select log);
-        }
-
-        /// <inheritdoc/>
-        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
-        {
-            string type = typeof(TException).ToString();
-            return LoadExceptionsAsync(r =>
-                from item in (
-                    from log in r.All<RealmExceptionReport>()
-                    where log.ExceptionType == type
-                    select log).ToArray()
-                where DateTimeOffset.Now.Subtract(item.Timestamp) < threshold
-                select item);
-        }
-
-        /// <inheritdoc/>
-        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
-        {
-            string
-                type = typeof(TException).ToString(),
-                _version = version.ToString();
-            return (await LoadExceptionsAsync(r =>
-                from log in r.All<RealmExceptionReport>()
-                where log.ExceptionType == type && log.AppVersion == _version
-                select log)).Logs;
-        }
-
-        // Loads and prepares an exceptions collection from the input data
-        [Pure, ItemNotNull]
-        private Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync([NotNull] Func<Realm, IEnumerable<RealmExceptionReport>> loader)
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync()
         {
             return Task.Run(() =>
             {
                 using (Realm realm = Realm.GetInstance(Configuration))
                 {
-                    RealmExceptionReport[] data = loader(realm).ToArray();
+                    // Crash reports must never be partially loaded, as some properties depend on all the logs saved in the database*
+                    RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
 
                     var query =
                         from grouped in
@@ -126,7 +55,7 @@ namespace BigWatsonDotNet.Loggers
                                     orderby version.Key
                                     select version.Key).ToArray()
                                 select new ExceptionReport(raw,
-                                    versions[0], versions[versions.Length - 1], sameType.Length,
+                                    versions[0], versions[versions.Length - 1], sameType.Length, //*
                                     sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
                             orderby exception.Timestamp descending
                             group exception by exception.AppVersion
@@ -139,6 +68,47 @@ namespace BigWatsonDotNet.Loggers
                     return new LogsCollection<ExceptionReport>(query.ToArray());
                 }
             });
+        }
+
+        /// <inheritdoc/>
+        public async Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(Predicate<ExceptionReport> predicate)
+        {
+            var query = 
+                from grouped in await LoadExceptionsAsync()
+                let items = (
+                    from item in grouped
+                    where predicate(item)
+                    select item).ToArray()
+                select new ReadOnlyGroupingList<Version, ExceptionReport>(grouped.Key, items); 
+
+            return new LogsCollection<ExceptionReport>(query.ToArray());
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync(TimeSpan threshold) => LoadExceptionsAsync(log => DateTimeOffset.Now.Subtract(log.Timestamp) < threshold);
+
+        /// <inheritdoc/>
+        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync(Version version) => (await LoadExceptionsAsync(log => log.AppVersion.Equals(version))).Logs;
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>() where TException : Exception
+        {
+            string type = typeof(TException).ToString();
+            return LoadExceptionsAsync(log => log.ExceptionType.Equals(type));
+        }
+
+        /// <inheritdoc/>
+        public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync<TException>(TimeSpan threshold) where TException : Exception
+        {
+            string type = typeof(TException).ToString();
+            return LoadExceptionsAsync(log =>log.ExceptionType.Equals(type) && DateTimeOffset.Now.Subtract(log.Timestamp) < threshold);
+        }
+
+        /// <inheritdoc/>
+        public async Task<IReadOnlyList<ExceptionReport>> LoadExceptionsAsync<TException>(Version version) where TException : Exception
+        {
+            string type = typeof(TException).ToString();
+            return (await LoadExceptionsAsync(log => log.ExceptionType.Equals(type) && log.AppVersion.Equals(version))).Logs;
         }
 
         #endregion
