@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Delegates;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
@@ -409,7 +410,7 @@ namespace BigWatsonDotNet.Loggers
             => TryFlushAsync<TLog>((log, _) => uploader(log), token, FlushMode.Serial);
 
         /// <inheritdoc/>
-        public Task<int> TryFlushAsync<TLog>(CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
         {
             if (typeof(TLog) == typeof(ExceptionReport)) return TryFlushAsync<TLog, RealmExceptionReport>(uploader, token, mode);
             if (typeof(TLog) == typeof(Event)) return TryFlushAsync<TLog, RealmEvent>(uploader, token, mode);
@@ -417,7 +418,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         // Flush implementation
-        private async Task<int> TryFlushAsync<TLog, TRealm>(CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) 
+        private async Task<int> TryFlushAsync<TLog, TRealm>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
             where TLog : LogBase
             where TRealm : RealmObject, ILog
         {
@@ -458,7 +459,7 @@ namespace BigWatsonDotNet.Loggers
             // Local function to remove a saved log with a specified Uid
             void RemoveUid(string uid)
             {
-                using (Realm realm = Realm.GetInstance())
+                using (Realm realm = Realm.GetInstance(Configuration))
                 {
                     TRealm target = realm.All<TRealm>().First(row => row.Uid == uid);
                     using (Transaction transaction = realm.BeginWrite())
