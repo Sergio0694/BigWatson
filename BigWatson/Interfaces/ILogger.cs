@@ -64,6 +64,13 @@ namespace BigWatsonDotNet.Interfaces
         Task ResetAsync();
 
         /// <summary>
+        /// Deletes all the existing logs present in the database according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to delete</param>
+        [PublicAPI]
+        Task ResetAsync<TLog>([NotNull] Predicate<TLog> predicate) where TLog : LogBase;
+
+        /// <summary>
         /// Deletes all the existing logs present in the database for the specified app <see cref="Version"/>
         /// </summary>
         /// <param name="version">The target <see cref="Version"/> to use to delete the saved logs</param>
@@ -105,6 +112,12 @@ namespace BigWatsonDotNet.Interfaces
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<string> ExportAsJsonAsync();
+
+        /// <summary>
+        /// Exports the content of the current logs database as a JSON string, according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to export</param>
+        Task<string> ExportAsJsonAsync<TLog>([NotNull] Predicate<TLog> predicate) where TLog : LogBase;
 
         /// <summary>
         /// Exports the content of the current logs database as a JSON string
@@ -154,6 +167,13 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="path">The path to the target export file</param>
         [PublicAPI]
         Task ExportAsJsonAsync([NotNull] string path);
+
+        /// <summary>
+        /// Exports the content of the current logs database into a JSON file with the specified path, according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to export</param>
+        Task ExportAsJsonAsync<TLog>([NotNull] string path, [NotNull] Predicate<TLog> predicate) where TLog : LogBase;
 
         /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path

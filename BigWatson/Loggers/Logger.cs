@@ -172,6 +172,12 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
+        public Task ResetAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task ResetAsync(Version version)
         {
             return Task.Run(() =>
@@ -280,6 +286,12 @@ namespace BigWatsonDotNet.Loggers
         public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
+        public Task<string> ExportAsJsonAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
@@ -299,6 +311,12 @@ namespace BigWatsonDotNet.Loggers
         {
             string json = await ExportAsJsonAsync();
             File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public Task ExportAsJsonAsync<TLog>(string path, Predicate<TLog> predicate) where TLog : LogBase
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
