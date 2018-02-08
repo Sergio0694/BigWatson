@@ -301,9 +301,32 @@ namespace BigWatsonDotNet.Loggers
         public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
-        public Task<string> ExportAsJsonAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        public async Task<string> ExportAsJsonAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
         {
-            throw new NotImplementedException();
+            // Open the destination streams
+            using (MemoryStream stream = new MemoryStream())
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
+            {
+                JObject jObj = new JObject();
+                await Task.Run(() =>
+                {
+                    IList<JObject> jlogs = (
+                        from pair in LoadAsync<TLog>()
+                        where predicate(pair.Log)
+                        select JObject.FromObject(pair.Log)).ToList();
+                    jObj["LogsCount"] = jlogs.Count;
+                    jObj["Logs"] = new JArray(jlogs);
+                });
+
+                // Write the JSON data
+                await jObj.WriteToAsync(jsonWriter);
+                await jsonWriter.FlushAsync();
+
+                // Return the JSON
+                byte[] bytes = stream.ToArray();
+                return Encoding.UTF8.GetString(bytes);
+            }
         }
 
         /// <inheritdoc/>
@@ -329,9 +352,10 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task ExportAsJsonAsync<TLog>(string path, Predicate<TLog> predicate) where TLog : LogBase
+        public async Task ExportAsJsonAsync<TLog>(string path, Predicate<TLog> predicate) where TLog : LogBase
         {
-            throw new NotImplementedException();
+            string json = await ExportAsJsonAsync(predicate);
+            File.WriteAllText(path, json);
         }
 
         /// <inheritdoc/>
@@ -382,11 +406,10 @@ namespace BigWatsonDotNet.Loggers
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
             {
-                JObject jObj = await Task.Run(() =>
+                // Prepare the logs
+                JObject jObj = new JObject();
+                await Task.Run(() =>
                 {
-                    JObject temp = new JObject();
-
-                    // Prepare the logs
                     using (Realm realm = Realm.GetInstance(Configuration))
                     {
                         foreach (Type type in types)
@@ -399,8 +422,8 @@ namespace BigWatsonDotNet.Loggers
                                     where predicate?.Invoke(exception) ?? true
                                     orderby exception.Timestamp descending
                                     select JObject.FromObject(exception)).ToList();
-                                temp["ExceptionsCount"] = jcrashes.Count;
-                                temp["Exceptions"] = new JArray(jcrashes);
+                                jObj["ExceptionsCount"] = jcrashes.Count;
+                                jObj["Exceptions"] = new JArray(jcrashes);
                             }
                             else if (type == typeof(Event))
                             {
@@ -411,13 +434,11 @@ namespace BigWatsonDotNet.Loggers
                                     where predicate?.Invoke(log) ?? true
                                     orderby log.Timestamp descending
                                     select JObject.FromObject(log, converter)).ToList();
-                                temp["EventsCount"] = jevents.Count;
-                                temp["Events"] = new JArray(jevents);
+                                jObj["EventsCount"] = jevents.Count;
+                                jObj["Events"] = new JArray(jevents);
                             }
                         }
                     }
-
-                    return temp;
                 });
 
                 // Write the JSON data
