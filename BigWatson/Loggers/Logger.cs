@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -460,27 +461,51 @@ namespace BigWatsonDotNet.Loggers
             => TryFlushAsync(uploader, token, FlushMode.Serial);
 
         /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(predicate, uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
         public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
             => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(predicate, uploader, token, FlushMode.Serial);
 
         /// <inheritdoc/>
         public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
             => TryFlushAsync<TLog>((log, _) => uploader(log), token, mode);
 
         /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync(predicate, (log, _) => uploader(log), token, mode);
+
+        /// <inheritdoc/>
+        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync(null, uploader, token, mode);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
         {
-            if (typeof(TLog) == typeof(ExceptionReport)) return TryFlushAsync<TLog, RealmExceptionReport>(uploader, token, mode);
-            if (typeof(TLog) == typeof(Event)) return TryFlushAsync<TLog, RealmEvent>(uploader, token, mode);
+            if (typeof(TLog) == typeof(ExceptionReport)) return TryFlushAsync<TLog, RealmExceptionReport>(predicate, uploader, token, mode);
+            if (typeof(TLog) == typeof(Event)) return TryFlushAsync<TLog, RealmEvent>(predicate, uploader, token, mode);
             throw new ArgumentException("The input type is not valid", nameof(TLog));
         }
 
         // Flush implementation
-        private async Task<int> TryFlushAsync<TLog, TRealm>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
+        private async Task<int> TryFlushAsync<TLog, TRealm>([CanBeNull] Predicate<TLog> predicate, [NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
             where TLog : LogBase
             where TRealm : RealmObject, ILog
         {
-            var query = await Task.Run(() => LoadAsync<TLog>());
+            var query = await Task.Run(() =>
+            {
+                if (predicate == null) return LoadAsync<TLog>();
+                return (
+                    from pair in LoadAsync<TLog>()
+                    where predicate(pair.Log)
+                    select pair).ToArray();
+            });
             
             int flushed = 0;
             switch (mode)
@@ -515,7 +540,7 @@ namespace BigWatsonDotNet.Loggers
 
         // Returns a collection of logs of the specified type, and their Uid in the database
         [Pure, NotNull]
-        private (TLog Log, string Uid)[] LoadAsync<TLog>() where TLog : LogBase
+        private IReadOnlyList<(TLog Log, string Uid)> LoadAsync<TLog>() where TLog : LogBase
         {
             using (Realm realm = Realm.GetInstance(Configuration))
             {
@@ -553,7 +578,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         // Local function to remove a saved log with a specified Uid
-        void RemoveUid<TRealm>(string uid) where TRealm : RealmObject, ILog
+        void RemoveUid<TRealm>([NotNull] string uid) where TRealm : RealmObject, ILog
         {
             using (Realm realm = Realm.GetInstance(Configuration))
             {
