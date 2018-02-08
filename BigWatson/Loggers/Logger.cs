@@ -176,9 +176,20 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
-        public Task ResetAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        public async Task ResetAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
         {
-            throw new NotImplementedException();
+            var query = await Task.Run(() => LoadAsync<TLog>());
+            
+            void Reset<TRealm>() where TRealm : RealmObject, ILog
+            {
+                foreach (var pair in query)
+                    if (predicate(pair.Log))
+                        RemoveUid<TRealm>(pair.Uid);
+            }
+
+            if (typeof(TLog) == typeof(ExceptionReport)) Reset<RealmExceptionReport>();
+            if (typeof(TLog) == typeof(Event)) Reset<RealmEvent>();
+            throw new ArgumentException("The input type is not valid", nameof(TLog));
         }
 
         /// <inheritdoc/>
@@ -448,59 +459,8 @@ namespace BigWatsonDotNet.Loggers
             where TLog : LogBase
             where TRealm : RealmObject, ILog
         {
-            // Map all the existing logs to public type instances and Uid pairs
-            (TLog Log, string Uid)[] query = await Task.Run(() =>
-            {
-                using (Realm realm = Realm.GetInstance(Configuration))
-                {
-                    if (typeof(TLog) == typeof(ExceptionReport))
-                    {
-                        RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
-
-                        return (
-                            from raw in data
-                            let sameType = (
-                                from item in data
-                                where item.ExceptionType.Equals(raw.ExceptionType)
-                                select item).ToArray()
-                            let versions = (
-                                from entry in sameType
-                                group entry by entry.AppVersion
-                                into version
-                                select version.Key).ToArray()
-                            let item = new ExceptionReport(raw,
-                                versions[0], versions[versions.Length - 1], sameType.Length,
-                                sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
-                            select ((TLog)(object)item, raw.Uid)).ToArray();
-                    }
-
-                    if (typeof(TLog) == typeof(Event))
-                    {
-                        return (
-                            from raw in realm.All<RealmEvent>().ToArray()
-                            let item = new Event(raw)
-                            select ((TLog)(object)item, raw.Uid)).ToArray();
-                    }
-
-                    throw new ArgumentException("The input type is not valid", nameof(TLog));
-                }
-            });
-
-            // Local function to remove a saved log with a specified Uid
-            void RemoveUid(string uid)
-            {
-                using (Realm realm = Realm.GetInstance(Configuration))
-                {
-                    TRealm target = realm.All<TRealm>().First(row => row.Uid == uid);
-                    using (Transaction transaction = realm.BeginWrite())
-                    {
-                        realm.Remove(target);
-                        transaction.Commit();
-                    }
-                }
-            }
+            var query = await Task.Run(() => LoadAsync<TLog>());
             
-            // Flush the items
             int flushed = 0;
             switch (mode)
             {
@@ -509,7 +469,7 @@ namespace BigWatsonDotNet.Loggers
                     foreach (var pair in query)
                     {
                         if (token.IsCancellationRequested || !await uploader(pair.Log, token)) break;
-                        RemoveUid(pair.Uid);
+                        RemoveUid<TRealm>(pair.Uid);
                         flushed++;
                     }
                     return flushed;
@@ -520,11 +480,68 @@ namespace BigWatsonDotNet.Loggers
                     for (int i = 0; i < results.Length; i++)
                         if (results[i])
                         {
-                            RemoveUid(query[i].Uid);
+                            RemoveUid<TRealm>(query[i].Uid);
                             flushed++;
                         }
                     return flushed;
                 default: throw new ArgumentException("The input flush mode is not valid", nameof(mode));
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        // Returns a collection of logs of the specified type, and their Uid in the database
+        [Pure, NotNull]
+        private (TLog Log, string Uid)[] LoadAsync<TLog>() where TLog : LogBase
+        {
+            using (Realm realm = Realm.GetInstance(Configuration))
+            {
+                if (typeof(TLog) == typeof(ExceptionReport))
+                {
+                    RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
+
+                    return (
+                        from raw in data
+                        let sameType = (
+                            from item in data
+                            where item.ExceptionType.Equals(raw.ExceptionType)
+                            select item).ToArray()
+                        let versions = (
+                            from entry in sameType
+                            group entry by entry.AppVersion
+                            into version
+                            select version.Key).ToArray()
+                        let item = new ExceptionReport(raw,
+                            versions[0], versions[versions.Length - 1], sameType.Length,
+                            sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                        select ((TLog)(object)item, raw.Uid)).ToArray();
+                }
+
+                if (typeof(TLog) == typeof(Event))
+                {
+                    return (
+                        from raw in realm.All<RealmEvent>().ToArray()
+                        let item = new Event(raw)
+                        select ((TLog)(object)item, raw.Uid)).ToArray();
+                }
+
+                throw new ArgumentException("The input type is not valid", nameof(TLog));
+            }
+        }
+
+        // Local function to remove a saved log with a specified Uid
+        void RemoveUid<TRealm>(string uid) where TRealm : RealmObject, ILog
+        {
+            using (Realm realm = Realm.GetInstance(Configuration))
+            {
+                TRealm target = realm.All<TRealm>().First(row => row.Uid == uid);
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    realm.Remove(target);
+                    transaction.Commit();
+                }
             }
         }
 
