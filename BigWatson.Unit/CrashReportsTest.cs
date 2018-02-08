@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -154,6 +155,105 @@ namespace BigWatsonDotNet.Unit
             Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 3);
             Assert.IsTrue(BigWatson.Instance.TryFlushAsync<ExceptionReport>(log => Task.Delay(500).ContinueWith(_ => true), CancellationToken.None).Result == 3);
             Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 0);
+        }
+
+        [TestMethod]
+        public void SequentialFlushFailTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new ArgumentException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new ArgumentException("We're being too lazy here!"),
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 3);
+            bool flushed = false;
+            Assert.IsTrue(BigWatson.Instance.TryFlushAsync<ExceptionReport>(async log =>
+            {
+                if (flushed) return false;
+                flushed = true;
+                await Task.Delay(500);
+                return true;
+            }, CancellationToken.None).Result == 1);
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 2);
+        }
+
+        [TestMethod]
+        public void ParallelFlushTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new ArgumentException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new ArgumentException("We're being too lazy here!"),
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 3);
+            Assert.IsTrue(BigWatson.Instance.TryFlushAsync<ExceptionReport>(log => Task.Delay(500).ContinueWith(_ => true), CancellationToken.None, FlushMode.Parallel).Result == 3);
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 0);
+        }
+
+        [TestMethod]
+        public void ParallelFlushFailTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new ArgumentException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new ArgumentException("We're being too lazy here!"),
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 3);
+            int flushed = 0;
+            Assert.IsTrue(BigWatson.Instance.TryFlushAsync<ExceptionReport>(async log =>
+            {
+                await Task.Delay(500);
+                return Interlocked.Increment(ref flushed) <= 2;
+            }, CancellationToken.None, FlushMode.Parallel).Result == 2);
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 1);
         }
     }
 }
