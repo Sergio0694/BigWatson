@@ -206,7 +206,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
         /// <returns>The number of logs that have been flushed correctly</returns>
         [PublicAPI]
-        Task<int> TryFlushLogsAsync<TLog>([NotNull] LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase;
+        Task<int> TryFlushAsync<TLog>([NotNull] LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase;
 
         /// <summary>
         /// Flushes all the logs of the specified type using the input <see cref="CancellableLogUploader{TLog}"/> function and deletes them from the local database
@@ -217,7 +217,7 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
         /// <returns>The number of logs that have been flushed correctly</returns>
         [PublicAPI]
-        Task<int> TryFlushLogsAsync<TLog>([NotNull] CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
+        Task<int> TryFlushAsync<TLog>([NotNull] CancellableLogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
     }
 
     /// <summary>
