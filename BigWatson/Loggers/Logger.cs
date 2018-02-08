@@ -407,7 +407,15 @@ namespace BigWatsonDotNet.Loggers
 
         /// <inheritdoc/>
         public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
-            => TryFlushAsync<TLog>((log, _) => uploader(log), token, FlushMode.Serial);
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync<TLog>((log, _) => uploader(log), token, mode);
 
         /// <inheritdoc/>
         public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
@@ -423,38 +431,42 @@ namespace BigWatsonDotNet.Loggers
             where TRealm : RealmObject, ILog
         {
             // Map all the existing logs to public type instances and Uid pairs
-            (TLog Log, string Uid)[] query;
-            using (Realm realm = Realm.GetInstance(Configuration))
+            (TLog Log, string Uid)[] query = await Task.Run(() =>
             {
-                if (typeof(TLog) == typeof(ExceptionReport))
+                using (Realm realm = Realm.GetInstance(Configuration))
                 {
-                    RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
+                    if (typeof(TLog) == typeof(ExceptionReport))
+                    {
+                        RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
 
-                    query = (
-                        from raw in data
-                        let sameType = (
-                            from item in data
-                            where item.ExceptionType.Equals(raw.ExceptionType)
-                            select item).ToArray()
-                        let versions = (
-                            from entry in sameType
-                            group entry by entry.AppVersion
-                            into version
-                            select version.Key).ToArray()
-                        let item = new ExceptionReport(raw,
-                            versions[0], versions[versions.Length - 1], sameType.Length,
-                            sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
-                        select ((TLog)(object)item, raw.Uid)).ToArray();
+                        return (
+                            from raw in data
+                            let sameType = (
+                                from item in data
+                                where item.ExceptionType.Equals(raw.ExceptionType)
+                                select item).ToArray()
+                            let versions = (
+                                from entry in sameType
+                                group entry by entry.AppVersion
+                                into version
+                                select version.Key).ToArray()
+                            let item = new ExceptionReport(raw,
+                                versions[0], versions[versions.Length - 1], sameType.Length,
+                                sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                            select ((TLog)(object)item, raw.Uid)).ToArray();
+                    }
+
+                    if (typeof(TLog) == typeof(Event))
+                    {
+                        return (
+                            from raw in realm.All<RealmEvent>().ToArray()
+                            let item = new Event(raw)
+                            select ((TLog)(object)item, raw.Uid)).ToArray();
+                    }
+
+                    throw new ArgumentException("The input type is not valid", nameof(TLog));
                 }
-                else if (typeof(TLog) == typeof(Event))
-                {
-                    query = (
-                        from raw in realm.All<RealmEvent>().ToArray()
-                        let item = new Event(raw)
-                        select ((TLog)(object)item, raw.Uid)).ToArray();
-                }
-                else throw new ArgumentException("The input type is not valid", nameof(TLog));
-            }
+            });
 
             // Local function to remove a saved log with a specified Uid
             void RemoveUid(string uid)
