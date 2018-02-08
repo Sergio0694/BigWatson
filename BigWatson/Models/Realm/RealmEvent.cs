@@ -13,6 +13,10 @@ namespace BigWatsonDotNet.Models.Realm
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class RealmEvent : RealmObject, ILog
     {
+        /// <inheritdoc/>
+        [PrimaryKey]
+        public string Uid { get; set; }
+
         /// <summary>
         /// Gets the raw <see cref="Priority"/> level value for the current log
         /// </summary>

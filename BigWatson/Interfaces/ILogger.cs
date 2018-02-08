@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Delegates;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Models.Abstract;
 using JetBrains.Annotations;
@@ -64,6 +66,13 @@ namespace BigWatsonDotNet.Interfaces
         Task ResetAsync();
 
         /// <summary>
+        /// Deletes all the existing logs present in the database according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to delete</param>
+        [PublicAPI]
+        Task ResetAsync<TLog>([NotNull] Predicate<TLog> predicate) where TLog : LogBase;
+
+        /// <summary>
         /// Deletes all the existing logs present in the database for the specified app <see cref="Version"/>
         /// </summary>
         /// <param name="version">The target <see cref="Version"/> to use to delete the saved logs</param>
@@ -105,6 +114,12 @@ namespace BigWatsonDotNet.Interfaces
         [PublicAPI]
         [Pure, ItemNotNull]
         Task<string> ExportAsJsonAsync();
+
+        /// <summary>
+        /// Exports the content of the current logs database as a JSON string, according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to export</param>
+        Task<string> ExportAsJsonAsync<TLog>([NotNull] Predicate<TLog> predicate) where TLog : LogBase;
 
         /// <summary>
         /// Exports the content of the current logs database as a JSON string
@@ -156,6 +171,13 @@ namespace BigWatsonDotNet.Interfaces
         Task ExportAsJsonAsync([NotNull] string path);
 
         /// <summary>
+        /// Exports the content of the current logs database into a JSON file with the specified path, according to the input <see cref="Predicate{T}"/>
+        /// </summary>
+        /// <param name="path">The path to the target export file</param>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to export</param>
+        Task ExportAsJsonAsync<TLog>([NotNull] string path, [NotNull] Predicate<TLog> predicate) where TLog : LogBase;
+
+        /// <summary>
         /// Exports the content of the current logs database into a JSON file with the specified path
         /// </summary>
         /// <param name="path">The path to the target export file</param>
@@ -196,5 +218,93 @@ namespace BigWatsonDotNet.Interfaces
         /// <param name="version">The target app <see cref="Version"/> for the logs to export</param>
         [PublicAPI]
         Task ExportAsJsonAsync<TLog>([NotNull] string path, [NotNull] Version version) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="LogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="LogUploader{TLog}"/> function to use to upload the logs of the input type</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type according to a given <see cref="Predicate{T}"/> using the input <see cref="LogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to flush</param>
+        /// <param name="uploader">The <see cref="LogUploader{TLog}"/> function to use to upload the logs of the input type</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] Predicate<TLog> predicate, [NotNull] LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="LogUploaderWithToken{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="LogUploaderWithToken{TLog}"/> function to use to upload the logs of the input type</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type according to a given <see cref="Predicate{T}"/> using the input <see cref="LogUploaderWithToken{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to flush</param>
+        /// <param name="uploader">The <see cref="LogUploaderWithToken{TLog}"/> function to use to upload the logs of the input type</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] Predicate<TLog> predicate, [NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="LogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="LogUploader{TLog}"/> function to use to upload the logs</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type according to a given <see cref="Predicate{T}"/> using the input <see cref="LogUploader{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to flush</param>
+        /// <param name="uploader">The <see cref="LogUploader{TLog}"/> function to use to upload the logs</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] Predicate<TLog> predicate, [NotNull] LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type using the input <see cref="LogUploaderWithToken{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="uploader">The <see cref="LogUploaderWithToken{TLog}"/> function to use to upload the logs</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
+
+        /// <summary>
+        /// Flushes all the logs of the specified type according to a given <see cref="Predicate{T}"/> using the input <see cref="LogUploaderWithToken{TLog}"/> function and deletes them from the local database
+        /// </summary>
+        /// <typeparam name="TLog">The type of logs to flush</typeparam>
+        /// <param name="predicate">The <see cref="Predicate{T}"/> to use to select the logs to flush</param>
+        /// <param name="uploader">The <see cref="LogUploaderWithToken{TLog}"/> function to use to upload the logs</param>
+        /// <param name="token">A <see cref="CancellationToken"/> for the operation</param>
+        /// <param name="mode">The desired execution mode. If <see cref="FlushMode.Parallel"/> is selected, the input function should be thread-safe to avoid issues</param>
+        /// <returns>The number of logs that have been flushed correctly</returns>
+        [PublicAPI]
+        Task<int> TryFlushAsync<TLog>([NotNull] Predicate<TLog> predicate, [NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase;
     }
 }

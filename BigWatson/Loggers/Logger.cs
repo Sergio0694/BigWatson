@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Delegates;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
@@ -33,6 +36,7 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmExceptionReport report = new RealmExceptionReport
             {
+                Uid = Guid.NewGuid().ToString(),
                 ExceptionType = e.GetType().ToString(),
                 HResult = e.HResult,
                 Message = e.Message,
@@ -51,6 +55,7 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmEvent report = new RealmEvent
             {
+                Uid = Guid.NewGuid().ToString(),
                 Priority = priority,
                 Message = message,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
@@ -172,6 +177,23 @@ namespace BigWatsonDotNet.Loggers
         }
 
         /// <inheritdoc/>
+        public async Task ResetAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        {
+            var query = await Task.Run(() => LoadAsync<TLog>());
+            
+            void Reset<TRealm>() where TRealm : RealmObject, ILog
+            {
+                foreach (var pair in query)
+                    if (predicate(pair.Log))
+                        RemoveUid<TRealm>(pair.Uid);
+            }
+
+            if (typeof(TLog) == typeof(ExceptionReport)) Reset<RealmExceptionReport>();
+            if (typeof(TLog) == typeof(Event)) Reset<RealmEvent>();
+            throw new ArgumentException("The input type is not valid", nameof(TLog));
+        }
+
+        /// <inheritdoc/>
         public Task ResetAsync(Version version)
         {
             return Task.Run(() =>
@@ -280,6 +302,35 @@ namespace BigWatsonDotNet.Loggers
         public Task<string> ExportAsJsonAsync() => ExportAsJsonAsync(null, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
+        public async Task<string> ExportAsJsonAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
+        {
+            // Open the destination streams
+            using (MemoryStream stream = new MemoryStream())
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
+            {
+                JObject jObj = new JObject();
+                await Task.Run(() =>
+                {
+                    IList<JObject> jlogs = (
+                        from pair in LoadAsync<TLog>()
+                        where predicate(pair.Log)
+                        select JObject.FromObject(pair.Log)).ToList();
+                    jObj["LogsCount"] = jlogs.Count;
+                    jObj["Logs"] = new JArray(jlogs);
+                });
+
+                // Write the JSON data
+                await jObj.WriteToAsync(jsonWriter);
+                await jsonWriter.FlushAsync();
+
+                // Return the JSON
+                byte[] bytes = stream.ToArray();
+                return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
+        /// <inheritdoc/>
         public Task<string> ExportAsJsonAsync(TimeSpan threshold) => ExportAsJsonAsync(entry => DateTimeOffset.Now.Subtract(entry.Timestamp) < threshold, typeof(ExceptionReport), typeof(Event));
 
         /// <inheritdoc/>
@@ -298,6 +349,13 @@ namespace BigWatsonDotNet.Loggers
         public async Task ExportAsJsonAsync(string path)
         {
             string json = await ExportAsJsonAsync();
+            File.WriteAllText(path, json);
+        }
+
+        /// <inheritdoc/>
+        public async Task ExportAsJsonAsync<TLog>(string path, Predicate<TLog> predicate) where TLog : LogBase
+        {
+            string json = await ExportAsJsonAsync(predicate);
             File.WriteAllText(path, json);
         }
 
@@ -349,11 +407,10 @@ namespace BigWatsonDotNet.Loggers
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
             {
-                JObject jObj = await Task.Run(() =>
+                // Prepare the logs
+                JObject jObj = new JObject();
+                await Task.Run(() =>
                 {
-                    JObject temp = new JObject();
-
-                    // Prepare the logs
                     using (Realm realm = Realm.GetInstance(Configuration))
                     {
                         foreach (Type type in types)
@@ -366,8 +423,8 @@ namespace BigWatsonDotNet.Loggers
                                     where predicate?.Invoke(exception) ?? true
                                     orderby exception.Timestamp descending
                                     select JObject.FromObject(exception)).ToList();
-                                temp["ExceptionsCount"] = jcrashes.Count;
-                                temp["Exceptions"] = new JArray(jcrashes);
+                                jObj["ExceptionsCount"] = jcrashes.Count;
+                                jObj["Exceptions"] = new JArray(jcrashes);
                             }
                             else if (type == typeof(Event))
                             {
@@ -378,13 +435,11 @@ namespace BigWatsonDotNet.Loggers
                                     where predicate?.Invoke(log) ?? true
                                     orderby log.Timestamp descending
                                     select JObject.FromObject(log, converter)).ToList();
-                                temp["EventsCount"] = jevents.Count;
-                                temp["Events"] = new JArray(jevents);
+                                jObj["EventsCount"] = jevents.Count;
+                                jObj["Events"] = new JArray(jevents);
                             }
                         }
                     }
-
-                    return temp;
                 });
 
                 // Write the JSON data
@@ -394,6 +449,145 @@ namespace BigWatsonDotNet.Loggers
                 // Return the JSON
                 byte[] bytes = stream.ToArray();
                 return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
+        #endregion
+
+        #region Flush
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(predicate, uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(predicate, uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync<TLog>((log, _) => uploader(log), token, mode);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync(predicate, (log, _) => uploader(log), token, mode);
+
+        /// <inheritdoc/>
+        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync(null, uploader, token, mode);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(Predicate<TLog> predicate, LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+        {
+            if (typeof(TLog) == typeof(ExceptionReport)) return TryFlushAsync<TLog, RealmExceptionReport>(predicate, uploader, token, mode);
+            if (typeof(TLog) == typeof(Event)) return TryFlushAsync<TLog, RealmEvent>(predicate, uploader, token, mode);
+            throw new ArgumentException("The input type is not valid", nameof(TLog));
+        }
+
+        // Flush implementation
+        private async Task<int> TryFlushAsync<TLog, TRealm>([CanBeNull] Predicate<TLog> predicate, [NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
+            where TLog : LogBase
+            where TRealm : RealmObject, ILog
+        {
+            var query = await Task.Run(() =>
+            {
+                if (predicate == null) return LoadAsync<TLog>();
+                return (
+                    from pair in LoadAsync<TLog>()
+                    where predicate(pair.Log)
+                    select pair).ToArray();
+            });
+            
+            int flushed = 0;
+            switch (mode)
+            {
+                // Sequentially upload and remove the logs, stop as soon as one fails
+                case FlushMode.Serial:
+                    foreach (var pair in query)
+                    {
+                        if (token.IsCancellationRequested || !await uploader(pair.Log, token)) break;
+                        RemoveUid<TRealm>(pair.Uid);
+                        flushed++;
+                    }
+                    return flushed;
+
+                // Upload the logs in parallel, then remove the ones uploaded correctly
+                case FlushMode.Parallel:
+                    bool[] results = await Task.WhenAll(query.Select(pair => uploader(pair.Log, token)));
+                    for (int i = 0; i < results.Length; i++)
+                        if (results[i])
+                        {
+                            RemoveUid<TRealm>(query[i].Uid);
+                            flushed++;
+                        }
+                    return flushed;
+                default: throw new ArgumentException("The input flush mode is not valid", nameof(mode));
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        // Returns a collection of logs of the specified type, and their Uid in the database
+        [Pure, NotNull]
+        private IReadOnlyList<(TLog Log, string Uid)> LoadAsync<TLog>() where TLog : LogBase
+        {
+            using (Realm realm = Realm.GetInstance(Configuration))
+            {
+                if (typeof(TLog) == typeof(ExceptionReport))
+                {
+                    RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
+
+                    return (
+                        from raw in data
+                        let sameType = (
+                            from item in data
+                            where item.ExceptionType.Equals(raw.ExceptionType)
+                            select item).ToArray()
+                        let versions = (
+                            from entry in sameType
+                            group entry by entry.AppVersion
+                            into version
+                            select version.Key).ToArray()
+                        let item = new ExceptionReport(raw,
+                            versions[0], versions[versions.Length - 1], sameType.Length,
+                            sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                        select ((TLog)(object)item, raw.Uid)).ToArray();
+                }
+
+                if (typeof(TLog) == typeof(Event))
+                {
+                    return (
+                        from raw in realm.All<RealmEvent>().ToArray()
+                        let item = new Event(raw)
+                        select ((TLog)(object)item, raw.Uid)).ToArray();
+                }
+
+                throw new ArgumentException("The input type is not valid", nameof(TLog));
+            }
+        }
+
+        // Local function to remove a saved log with a specified Uid
+        void RemoveUid<TRealm>([NotNull] string uid) where TRealm : RealmObject, ILog
+        {
+            using (Realm realm = Realm.GetInstance(Configuration))
+            {
+                TRealm target = realm.All<TRealm>().First(row => row.Uid == uid);
+                using (Transaction transaction = realm.BeginWrite())
+                {
+                    realm.Remove(target);
+                    transaction.Commit();
+                }
             }
         }
 

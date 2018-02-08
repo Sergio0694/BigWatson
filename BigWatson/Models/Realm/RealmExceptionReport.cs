@@ -12,6 +12,10 @@ namespace BigWatsonDotNet.Models.Realm
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class RealmExceptionReport : RealmObject, ILog
     {
+        /// <inheritdoc/>
+        [PrimaryKey]
+        public string Uid { get; set; }
+
         /// <summary>
         /// Gets a string representing the Type of the Exception
         /// </summary>
