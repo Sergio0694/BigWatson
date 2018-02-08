@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using BigWatsonDotNet.Delegates;
 using BigWatsonDotNet.Enums;
 using BigWatsonDotNet.Interfaces;
 using BigWatsonDotNet.Models;
@@ -33,6 +35,7 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmExceptionReport report = new RealmExceptionReport
             {
+                Uid = Guid.NewGuid().ToString(),
                 ExceptionType = e.GetType().ToString(),
                 HResult = e.HResult,
                 Message = e.Message,
@@ -51,6 +54,7 @@ namespace BigWatsonDotNet.Loggers
         {
             RealmEvent report = new RealmEvent
             {
+                Uid = Guid.NewGuid().ToString(),
                 Priority = priority,
                 Message = message,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(),
@@ -412,6 +416,115 @@ namespace BigWatsonDotNet.Loggers
                 // Return the JSON
                 byte[] bytes = stream.ToArray();
                 return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
+        #endregion
+
+        #region Flush
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token) where TLog : LogBase
+            => TryFlushAsync(uploader, token, FlushMode.Serial);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploader<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+            => TryFlushAsync<TLog>((log, _) => uploader(log), token, mode);
+
+        /// <inheritdoc/>
+        public Task<int> TryFlushAsync<TLog>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) where TLog : LogBase
+        {
+            if (typeof(TLog) == typeof(ExceptionReport)) return TryFlushAsync<TLog, RealmExceptionReport>(uploader, token, mode);
+            if (typeof(TLog) == typeof(Event)) return TryFlushAsync<TLog, RealmEvent>(uploader, token, mode);
+            throw new ArgumentException("The input type is not valid", nameof(TLog));
+        }
+
+        // Flush implementation
+        private async Task<int> TryFlushAsync<TLog, TRealm>(LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
+            where TLog : LogBase
+            where TRealm : RealmObject, ILog
+        {
+            // Map all the existing logs to public type instances and Uid pairs
+            (TLog Log, string Uid)[] query = await Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                {
+                    if (typeof(TLog) == typeof(ExceptionReport))
+                    {
+                        RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
+
+                        return (
+                            from raw in data
+                            let sameType = (
+                                from item in data
+                                where item.ExceptionType.Equals(raw.ExceptionType)
+                                select item).ToArray()
+                            let versions = (
+                                from entry in sameType
+                                group entry by entry.AppVersion
+                                into version
+                                select version.Key).ToArray()
+                            let item = new ExceptionReport(raw,
+                                versions[0], versions[versions.Length - 1], sameType.Length,
+                                sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
+                            select ((TLog)(object)item, raw.Uid)).ToArray();
+                    }
+
+                    if (typeof(TLog) == typeof(Event))
+                    {
+                        return (
+                            from raw in realm.All<RealmEvent>().ToArray()
+                            let item = new Event(raw)
+                            select ((TLog)(object)item, raw.Uid)).ToArray();
+                    }
+
+                    throw new ArgumentException("The input type is not valid", nameof(TLog));
+                }
+            });
+
+            // Local function to remove a saved log with a specified Uid
+            void RemoveUid(string uid)
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                {
+                    TRealm target = realm.All<TRealm>().First(row => row.Uid == uid);
+                    using (Transaction transaction = realm.BeginWrite())
+                    {
+                        realm.Remove(target);
+                        transaction.Commit();
+                    }
+                }
+            }
+            
+            // Flush the items
+            int flushed = 0;
+            switch (mode)
+            {
+                // Sequentially upload and remove the logs, stop as soon as one fails
+                case FlushMode.Serial:
+                    foreach (var pair in query)
+                    {
+                        if (token.IsCancellationRequested || !await uploader(pair.Log, token)) break;
+                        RemoveUid(pair.Uid);
+                        flushed++;
+                    }
+                    return flushed;
+
+                // Upload the logs in parallel, then remove the ones uploaded correctly
+                case FlushMode.Parallel:
+                    bool[] results = await Task.WhenAll(query.Select(pair => uploader(pair.Log, token)));
+                    for (int i = 0; i < results.Length; i++)
+                        if (results[i])
+                        {
+                            RemoveUid(query[i].Uid);
+                            flushed++;
+                        }
+                    return flushed;
+                default: throw new ArgumentException("The input flush mode is not valid", nameof(mode));
             }
         }
 

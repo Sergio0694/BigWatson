@@ -9,6 +9,11 @@ namespace BigWatsonDotNet.Models.Abstract
     internal interface ILog
     {
         /// <summary>
+        /// Gets the key of the current event
+        /// </summary>
+        string Uid { get; }
+
+        /// <summary>
         /// Gets the timestamp for the current log
         /// </summary>
         DateTimeOffset Timestamp { get; }

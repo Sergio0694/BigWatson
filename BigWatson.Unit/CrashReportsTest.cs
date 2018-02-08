@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using BigWatsonDotNet.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -123,6 +125,35 @@ namespace BigWatsonDotNet.Unit
             // Checks
             LogsCollection<ExceptionReport> reports = BigWatson.Instance.LoadExceptionsAsync().Result;
             Assert.IsTrue(reports.Logs.First().UsedMemory == 128L);
+        }
+
+        [TestMethod]
+        public void SequentialFlushTest()
+        {
+            // Log
+            BigWatson.Instance.ResetAsync().Wait();
+            Exception[] exceptions =
+            {
+                new ArgumentException("Hello world!"),
+                new ArithmeticException("Division by zero"),
+                new ArgumentException("We're being too lazy here!"),
+            };
+            foreach (Exception exception in exceptions)
+            {
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception e)
+                {
+                    BigWatson.Instance.Log(e);
+                }
+            }
+
+            // Checks
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 3);
+            Assert.IsTrue(BigWatson.Instance.TryFlushAsync<ExceptionReport>(log => Task.Delay(500).ContinueWith(_ => true), CancellationToken.None).Result == 3);
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 0);
         }
     }
 }
