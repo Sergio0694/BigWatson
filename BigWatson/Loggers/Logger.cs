@@ -167,8 +167,8 @@ namespace BigWatsonDotNet.Loggers
                 using (Realm realm = Realm.GetInstance(Configuration))
                 using (Transaction transaction = realm.BeginWrite())
                 {
-                    realm.RemoveRange(realm.All<RealmEvent>());
-                    realm.RemoveRange(realm.All<RealmExceptionReport>());
+                    realm.RemoveAll<RealmEvent>();
+                    realm.RemoveAll<RealmExceptionReport>();
                     transaction.Commit();
                 }
 
@@ -219,14 +219,10 @@ namespace BigWatsonDotNet.Loggers
                 using (Realm realm = Realm.GetInstance(Configuration))
                 using (Transaction transaction = realm.BeginWrite())
                 {
-                    // Execute the query
-                    IQueryable<RealmObject> query;
-                    if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>();
-                    else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>();
+                    if (typeof(TLog) == typeof(Event)) realm.RemoveAll<RealmEvent>();
+                    else if (typeof(TLog) == typeof(ExceptionReport)) realm.RemoveAll<RealmExceptionReport>();
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
 
-                    // Delete the items
-                    realm.RemoveRange(query);
                     transaction.Commit();
                 }
 
@@ -242,15 +238,11 @@ namespace BigWatsonDotNet.Loggers
                 using (Realm realm = Realm.GetInstance(Configuration))
                 using (Transaction transaction = realm.BeginWrite())
                 {
-                    // Execute the query
                     string _version = version.ToString();
-                    IQueryable<RealmObject> query;
-                    if (typeof(TLog) == typeof(Event)) query = realm.All<RealmEvent>().Where(entry => entry.AppVersion == _version);
-                    else if (typeof(TLog) == typeof(ExceptionReport)) query = realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == _version);
+                    if (typeof(TLog) == typeof(Event)) realm.RemoveRange(realm.All<RealmEvent>().Where(entry => entry.AppVersion == _version));
+                    else if (typeof(TLog) == typeof(ExceptionReport)) realm.RemoveRange(realm.All<RealmExceptionReport>().Where(entry => entry.AppVersion == _version));
                     else throw new ArgumentException("The input type is not valid", nameof(TLog));
-
-                    // Delete the items
-                    realm.RemoveRange(query);
+                    
                     transaction.Commit();
                 }
 

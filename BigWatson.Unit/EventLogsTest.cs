@@ -57,11 +57,14 @@ namespace BigWatsonDotNet.Unit
             BigWatson.Instance.Log(EventPriority.Warning, "Watch out!");
 
             // Checks
-            BigWatson.Instance.ResetAsync<ExceptionReport>();
             LogsCollection<Event> reports = BigWatson.Instance.LoadEventsAsync().Result;
             Assert.IsTrue(reports.LogsCount == 2);
             Assert.IsTrue(reports.Logs.First().Priority == EventPriority.Warning);
             Assert.IsTrue(reports.Logs.Skip(1).First().Priority == EventPriority.Info);
+            BigWatson.Instance.ResetAsync<Event>().Wait();
+            Assert.IsTrue(BigWatson.Instance.LoadEventsAsync().Result.LogsCount == 0);
+            BigWatson.Instance.ResetAsync<ExceptionReport>().Wait();
+            Assert.IsTrue(BigWatson.Instance.LoadExceptionsAsync().Result.LogsCount == 0);
         }
     }
 }
