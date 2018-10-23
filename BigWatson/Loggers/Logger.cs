@@ -179,7 +179,7 @@ namespace BigWatsonDotNet.Loggers
         /// <inheritdoc/>
         public async Task ResetAsync<TLog>(Predicate<TLog> predicate) where TLog : LogBase
         {
-            var query = await Task.Run(() => LoadAsync<TLog>());
+            var query = await Task.Run(LoadAsync<TLog>);
             
             void Reset<TRealm>() where TRealm : RealmObject, ILog
             {
@@ -486,6 +486,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         // Flush implementation
+        [SuppressMessage("ReSharper", "MethodSupportsCancellation")] // Local db query
         private async Task<int> TryFlushAsync<TLog, TRealm>([CanBeNull] Predicate<TLog> predicate, [NotNull] LogUploaderWithToken<TLog> uploader, CancellationToken token, FlushMode mode) 
             where TLog : LogBase
             where TRealm : RealmObject, ILog

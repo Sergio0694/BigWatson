@@ -12,6 +12,7 @@ namespace BigWatsonDotNet.Interfaces
     /// <summary>
     /// An interface for a logger instance with write permission
     /// </summary>
+    [PublicAPI]
     public interface ILogger : IReadOnlyLogger
     {
         /// <summary>

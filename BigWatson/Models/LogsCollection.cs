@@ -12,6 +12,7 @@ namespace BigWatsonDotNet.Models
     /// <summary>
     /// A class that wraps a grouped collection of saved logs
     /// </summary>
+    [PublicAPI]
     public sealed class LogsCollection<TLog> : IReadOnlyList<ReadOnlyGroupingList<Version, TLog>>
         where TLog : LogBase
     {

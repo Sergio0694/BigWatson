@@ -1,8 +1,11 @@
-﻿namespace BigWatsonDotNet.Enums
+﻿using JetBrains.Annotations;
+
+namespace BigWatsonDotNet.Enums
 {
     /// <summary>
     /// Indicates a priority level for a logged event
     /// </summary>
+    [PublicAPI]
     public enum EventPriority : byte
     {
         /// <summary>

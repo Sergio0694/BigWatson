@@ -7,17 +7,16 @@
     <Company>Sergio Pedri</Company>
     <PackageProjectUrl>https://github.com/Sergio0694/BigWatson</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/Sergio0694/BigWatson/blob/master/LICENSE.md</PackageLicenseUrl>
-    <Copyright>Copyright (c) 2017 Sergio Pedri</Copyright>
+    <Copyright>Copyright (c) 2018 Sergio Pedri</Copyright>
     <Description>A complete, ligthweight and self-contained .NET Standard 2.0 offline exception logging library, powered by Realm</Description>
     <PackageTags>csharp, netstandard, realm, exception, report, debug, coding, test, log</PackageTags>
     <RootNamespace>BigWatsonDotNet</RootNamespace>
     <PackageIconUrl>http://i.cubeupload.com/I7GClf.png</PackageIconUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>• New APIs and options added
-• Bug fixes and code optimizations</PackageReleaseNotes>
-    <AssemblyVersion>1.5.0.0</AssemblyVersion>
-    <FileVersion>1.5.0.0</FileVersion>
-    <Version>1.5.0</Version>
+    <PackageReleaseNotes>• NuGet packages updated</PackageReleaseNotes>
+    <AssemblyVersion>1.5.1.0</AssemblyVersion>
+    <FileVersion>1.5.1.0</FileVersion>
+    <Version>1.5.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -31,10 +30,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ben.Demystifier" Version="0.0.43" />
-    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Realm.Database" Version="2.1.0" />
+    <PackageReference Include="Ben.Demystifier" Version="0.1.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Realm.Database" Version="3.2.1" />
   </ItemGroup>
 
 </Project>
