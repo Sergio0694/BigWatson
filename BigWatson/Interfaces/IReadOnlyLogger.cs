@@ -20,6 +20,14 @@ namespace BigWatsonDotNet.Interfaces
         long Size { get; }
 
         /// <summary>
+        /// Checks whether or not the <see cref="Realm"/> instance in use contains at least a crash report
+        /// </summary>
+        /// <returns></returns>
+        [PublicAPI]
+        [Pure]
+        Task<bool> AnyExceptionsAsync();
+
+        /// <summary>
         /// Loads the groups with the previous exceptions from the <see cref="Realm"/> instance in use
         /// </summary>
         [PublicAPI]

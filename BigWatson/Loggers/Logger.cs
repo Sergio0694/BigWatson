@@ -571,7 +571,7 @@ namespace BigWatsonDotNet.Loggers
         }
 
         // Local function to remove a saved log with a specified Uid
-        void RemoveUid<TRealm>([NotNull] string uid) where TRealm : RealmObject, ILog
+        private void RemoveUid<TRealm>([NotNull] string uid) where TRealm : RealmObject, ILog
         {
             using (Realm realm = Realm.GetInstance(Configuration))
             {

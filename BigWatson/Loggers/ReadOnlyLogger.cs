@@ -30,13 +30,23 @@ namespace BigWatsonDotNet.Loggers
         #region Crash reports
 
         /// <inheritdoc/>
+        public Task<bool> AnyExceptionsAsync()
+        {
+            return Task.Run(() =>
+            {
+                using (Realm realm = Realm.GetInstance(Configuration))
+                    return realm.All<RealmExceptionReport>().Any();
+            });
+        }
+
+        /// <inheritdoc/>
         public Task<LogsCollection<ExceptionReport>> LoadExceptionsAsync()
         {
             return Task.Run(() =>
             {
                 using (Realm realm = Realm.GetInstance(Configuration))
                 {
-                    // Crash reports must never be partially loaded, as some properties depend on all the logs saved in the database*
+                    // Crash reports must never be partially loaded, as some properties depend on all the logs saved in the database
                     RealmExceptionReport[] data = realm.All<RealmExceptionReport>().ToArray();
 
                     var query =
@@ -55,7 +65,7 @@ namespace BigWatsonDotNet.Loggers
                                     orderby version.Key
                                     select version.Key).ToArray()
                                 select new ExceptionReport(raw,
-                                    versions[0], versions[versions.Length - 1], sameType.Length, //*
+                                    versions[0], versions[versions.Length - 1], sameType.Length,
                                     sameType[0].Timestamp, sameType[sameType.Length - 1].Timestamp)
                             orderby exception.Timestamp descending
                             group exception by exception.AppVersion

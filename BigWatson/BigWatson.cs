@@ -54,7 +54,7 @@ namespace BigWatsonDotNet
         /// Gets the default <see cref="RealmConfiguration"/> instance for the <see cref="Realm"/> used by the library
         /// </summary>
         [NotNull]
-        private static RealmConfiguration DefaultConfiguration => new RealmConfiguration(Path.Combine(WorkingDirectoryPath, $@"crashreports{DatabaseExtension}"));
+        private static RealmConfiguration DefaultConfiguration => new RealmConfiguration(Path.Combine(WorkingDirectoryPath, $"crashreports{DatabaseExtension}"));
 
         #endregion
 
@@ -105,7 +105,7 @@ namespace BigWatsonDotNet
         public static IReadOnlyLogger Load([NotNull] Stream stream)
         {
             if (!stream.CanRead) throw new ArgumentException("The input stream can't be read from", nameof(stream));
-            String filename = Path.Combine(CacheDirectoryPath, $"{Guid.NewGuid().ToString()}{DatabaseExtension}");
+            string filename = Path.Combine(CacheDirectoryPath, $"{Guid.NewGuid().ToString()}{DatabaseExtension}");
             using (FileStream file = File.OpenWrite(filename)) stream.CopyTo(file);
             return Load(filename);
         }

@@ -15,6 +15,24 @@ namespace BigWatsonDotNet.Unit
     public class CrashReportsTest
     {
         [TestMethod]
+        public void AnyTest()
+        {
+            BigWatson.Instance.ResetAsync().Wait();
+            bool any = BigWatson.Instance.AnyExceptionsAsync().Result;
+            Assert.IsFalse(any);
+            try
+            {
+                throw new InvalidOperationException("Hello world!");
+            }
+            catch (Exception e)
+            {
+                BigWatson.Instance.Log(e);
+            }
+            any = BigWatson.Instance.AnyExceptionsAsync().Result;
+            Assert.IsTrue(any);
+        }
+
+        [TestMethod]
         public void LogTest()
         {
             // Log
