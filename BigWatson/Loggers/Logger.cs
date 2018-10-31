@@ -286,6 +286,19 @@ namespace BigWatsonDotNet.Loggers
             });
         }
 
+        /// <inheritdoc/>
+        public Task ExportAsync(Stream stream)
+        {
+            if (!stream.CanWrite) throw new ArgumentException("The input stream doesn't support write operations", nameof(stream));
+            return Task.Run(() =>
+            {
+                using (FileStream file = File.OpenRead(Configuration.DatabasePath))
+                {
+                    file.CopyTo(stream);
+                }
+            });
+        }
+
         #endregion
 
         #region JSON export

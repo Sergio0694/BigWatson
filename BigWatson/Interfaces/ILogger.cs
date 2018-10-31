@@ -110,6 +110,12 @@ namespace BigWatsonDotNet.Interfaces
         Task ExportAsync([NotNull] string path);
 
         /// <summary>
+        /// Copies the content of the current logs database into the input <see cref="Stream"/>
+        /// </summary>
+        [PublicAPI]
+        Task ExportAsync([NotNull] Stream stream);
+
+        /// <summary>
         /// Exports the content of the current logs database as a JSON string
         /// </summary>
         [PublicAPI]
